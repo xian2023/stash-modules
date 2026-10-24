@@ -1,31 +1,6 @@
-# Independent X/Twitter Stash filter. GPL-3.0-only. See docs/X_AD_FILTER.md.
-name: X 去广告 · 时间线净化
-desc: 过滤 X/Twitter 时间线和推文详情内有明确 promoted 标记的广告；保留分页与普通媒体，不额外请求服务器。JSON 接口适配预览，需 iPhone 实测；不能保证移除全部广告。
-category: 去广告
-version: 2026.10.24-preview.1
+# Native-app filter retired after device-confirmed MitM-only failure.
+name: X 原生去广告 · 已停用
+desc: 原生 X App 在仅开启 HTTPS 解密、不执行脚本时仍无法加载帖子，原生适配暂停。此版本无解密域名、脚本或规则，不再去广告。请停用旧版和诊断版并重连 Stash；网页版另见 X_Web_remove_ads.stoverride。
+category: 兼容性
+version: 2026.10.24-preview.2
 homepage: https://github.com/xian2023/stash-modules
-http:
-  mitm:
-    - api.x.com
-    - api.twitter.com
-    - x.com
-    - twitter.com
-  script:
-    - match: ^https://(?:api\.)?(?:twitter|x)\.com/(?:i/api/)?graphql/[^/?#]+/(?:HomeTimeline|HomeLatestTimeline|TweetDetail|SearchTimeline|UserTweets|UserTweetsAndReplies|UserMedia|ListLatestTweetsTimeline|Bookmarks|CommunityTweetsTimeline|CommunityMediaTimeline)(?:\?|$)
-      name: x-timeline-ads-866381593f3498d7
-      type: response
-      require-body: true
-      binary-mode: false
-      timeout: 2
-      max-size: 2097152
-    - match: ^https://api\.(?:twitter|x)\.com/2/(?:timeline/(?:home|profile/\d+|conversation/\d+|list)|search/adaptive)\.json(?:\?|$)
-      name: x-timeline-ads-866381593f3498d7
-      type: response
-      require-body: true
-      binary-mode: false
-      timeout: 2
-      max-size: 2097152
-script-providers:
-  x-timeline-ads-866381593f3498d7:
-    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/x/866381593f3498d7/response.js
-    interval: 86400

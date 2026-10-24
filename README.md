@@ -1,18 +1,20 @@
 # Stash Modules
 
-供 iPhone Stash 远程导入的模块。提供 Bilibili 去广告与空降助手，以及独立的 X/Twitter 时间线去广告。
+供 iPhone Stash 远程导入的模块。提供 Bilibili 去广告与空降助手，以及可选的 X 网页版去广告预览。
 
 ## X / Twitter 去广告
 
-**兼容性警告：已收到 iPhone X 官方 App 启用后帖子刷新失败、停用恢复的反馈。原生 App 用户请暂时停用此模块；离线检查通过不代表真机可用。正在通过 [联通诊断](docs/X_AD_FILTER.md#帖子无法加载时的联通诊断) 区分 HTTPS 解密与脚本问题，尚未确认根因。**
+**原生 App 适配已暂停。真机确认：不运行任何脚本、只开启 HTTPS 解密的诊断版也无法刷新，日志为 `TLS handshake error from api.twitter.com:443: EOF`。旧去广告和诊断地址已更新为停用版，不再添加任何网络配置。请停用两个旧版并重连 Stash；这不是原生去广告已修好。Bilibili 模块不受本次变更影响。**
+
+可选的 **Safari / PWA 网页版**预览使用独立地址：
 
 ```text
-https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/X_remove_ads.stoverride
+https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/X_Web_remove_ads.stoverride
 ```
 
-在 Stash 覆写中单独导入，可与 Bilibili 模块同时启用。当前为 `2026.10.24-preview.1`：针对首页、推文详情/回复、搜索等 JSON 时间线中的明确推广标记；保留正常推文、图片/视频和分页游标，不额外请求服务器。需要开启并信任 HTTPS 解密，停用其他处理相同 X 接口的脚本。
+当前为 `2026.10.24-web-preview.1`，仅匹配 `x.com/i/api/graphql/` 下的首页、关注和推文详情三个操作，只添加 `x.com` 解密，不包含原生 API 域名。不能去除原生 App 广告；这是可选方案，无需为继续使用原生 App 而启用它。
 
-模块约 1.4 KiB、脚本约 6 KiB。尚未 iPhone/X 真机验证，不能保证移除全部广告；详见 [范围、性能与兼容说明](docs/X_AD_FILTER.md)。
+保留普通推文、媒体与分页，不额外请求服务器。网页版仍未在本机完成真机验证；若影响加载请停用。详见 [范围、性能与兼容说明](docs/X_AD_FILTER.md)。
 
 ## Bilibili 去广告与空降
 

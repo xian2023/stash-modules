@@ -1,0 +1,21 @@
+# Independent WEB-ONLY X Stash filter. GPL-3.0-only. See docs/X_AD_FILTER.md.
+name: X 网页版去广告 · 预览
+desc: 仅供 Safari/PWA 的 x.com 网页时间线与详情，过滤明确推广标记；仅解密 x.com，不包含 api.x.com 或 api.twitter.com。不能去除原生 App 广告，尚未本机验证；若影响加载请停用。
+category: 去广告
+version: 2026.10.24-web-preview.1
+homepage: https://github.com/xian2023/stash-modules
+http:
+  mitm:
+    - x.com
+  script:
+    - match: ^https://x\.com/i/api/graphql/[^/?#]+/(?:HomeTimeline|HomeLatestTimeline|TweetDetail)(?:\?|$)
+      name: x-timeline-ads-866381593f3498d7
+      type: response
+      require-body: true
+      binary-mode: false
+      timeout: 2
+      max-size: 2097152
+script-providers:
+  x-timeline-ads-866381593f3498d7:
+    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/x/866381593f3498d7/response.js
+    interval: 86400

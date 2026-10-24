@@ -1,0 +1,8 @@
+{
+  "version": "2026.10.24-web-preview.1",
+  "release": "866381593f3498d7",
+  "module": "X_Web_remove_ads.stoverride",
+  "scripts": {
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/x/866381593f3498d7/response.js": "866381593f3498d70991ecbe43cb3c77dbcec0771b430b645ef241dff05b4c29"
+  }
+}

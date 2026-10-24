@@ -1,62 +1,56 @@
-# X/Twitter 去广告覆写
+# X/Twitter 模块状态与兼容性
 
-**当前状态：iPhone 官方 X App 已反馈启用后帖子刷新失败，停用后恢复。请先保持去广告模块停用。尚未确认是 HTTPS 解密、脚本启动还是正文修改，不能把此版本标为原生 App 可用。**
+## 原生 App：暂停适配，先恢复加载
 
-## 帖子无法加载时的联通诊断
+本次真机反馈形成了明确的对照：
 
-诊断地址（此项不去广告）：
+1. 开启原去广告模块后首页刷新失败，停用后恢复。
+2. 停用去广告模块，改为只启用同域名、无脚本的诊断版，仍然失败。
+3. 日志显示 `TLS handshake error from api.twitter.com:443: EOF`，并出现证书查询记录。
+
+因此无需运行广告脚本即可触发故障，握手失败发生在 JSON 正文处理之前。`EOF` 表示连接结束；它本身不能进一步区分 App 的证书校验、Stash 的 TLS/HTTP 引擎兼容或其他握手问题，不能直接宣布已确认是证书锁定。后续排查需要 X / Stash 版本与对应握手错误。
+
+**请停用或删除 `X_remove_ads` 和 `X_MITM_diagnostic` 两个旧版，重新连接 Stash，再完全退出并打开 X。不要为了原生去广告继续反复开启诊断版。Bilibili 模块可以保持启用。**
+
+为避免远程用户继续导入故障配置，两个旧地址已更新为仅含名称、描述等展示字段的停用版：
+
+- `X_remove_ads.stoverride`：`2026.10.24-preview.2`，无解密、脚本、provider、分流或拦截规则。
+- `X_MITM_diagnostic.stoverride`：`2026.10.24-diag.2`，诊断结束，同样不添加网络配置。
+
+这属于撤除故障功能，不代表原生 App 去广告已修复。远程文件更新不会替设备立即更新本地副本，请先主动停用，或手动更新后重连。停用版不使用 `#!replace`，不会清空 Bilibili 或其他模块的 HTTPS 解密列表。若基础配置或其他覆写也添加了 X 的 API 解密域名，仍需从对应来源移除；停用版不能选择性删除其他来源的列表项。
+
+## 可选网页版预览
+
+独立地址，仅供愿意使用 Safari/PWA 网页版的用户：
 
 ```text
-https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/X_MITM_diagnostic.stoverride
+https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/X_Web_remove_ads.stoverride
 ```
 
-1. 保持 `X_remove_ads` 和其他处理 X 的覆写停用，单独添加并启用诊断版。已有 Bilibili 模块可保留。
-2. 重新连接 Stash，然后完全退出 X 再打开，刷新一次首页。
-3. 记录能否加载。失败则立即停用诊断版并重连 Stash，恢复正常使用。测试后也应停用诊断版。
+版本 `2026.10.24-web-preview.1`，使用之前独立编写的 JSON 过滤器，**尚未本机真机验收，不能去除原生 App 广告，也不保证完全不影响原生 App 使用的网页或内嵌页面。**
 
-诊断版只有与原模块完全相同的四个 MitM 域名，没有脚本、provider、正文缓冲/改写、拦截或分流规则。如果它同样导致失败，说明在不执行广告脚本时连接已失败，应查看 Stash 的相关连接错误（TLS、证书、HTTP 引擎或网络），不应继续猜改 JSON；这本身仍不能证明是证书锁定。如果诊断版正常，则继续定位脚本下载、执行环境与改写后的响应。
+- 仅添加 `x.com` 为 HTTPS 解密域名；不添加 `api.x.com`、`api.twitter.com`、`twitter.com`。
+- 仅匹配 `https://x.com/i/api/graphql/<query-id>/<operation>`，操作限定 `HomeTimeline`、`HomeLatestTimeline`、`TweetDetail`。
+- 不匹配原生 API、旧 REST、登录、私信或账号写操作。HTTPS 解密本身仍是域名级别，URL 限定只控制正文脚本何时运行。
+- 只删除显示容器上明确的 `promotedMetadata` / `promoted_metadata` 或推广条目 ID；保留普通媒体、引用、转推、分页与顺序，不按正文关键词删帖。
+- 无额外 HTTP 请求、Cookie 收集、存储或内容日志。脚本约 6 KiB，配置和脚本独立缓存。
 
-反馈只需“诊断版正常/仍失败”、X 和 Stash 版本，以及错误类型。不要分享请求头、Cookie、Authorization、完整 URL 查询参数或时间线正文。
+如选择使用：保持两个原生旧版和其他重叠 X 覆写停用，确保 Stash 自有证书已受信任，单独导入网页版预览。在 Safari 中访问 `https://x.com`；也可通过 Safari“分享 → 添加到主屏幕”使用 PWA。若出现加载问题立即停用网页版模块、重连恢复。无需为了继续使用原生 App 安装网页版模块。
 
-现有公开规则也有明确的适用边界：[fmz200 的 XWebAds 模块](https://github.com/fmz200/wool_scripts/blob/main/Surge/module/XWebAds.module) 标为网页版，解密域名仅为 `x.com`。本仓库先前扩大到原生 API 域名没有真机依据，不能从网页过滤逻辑推断原生兼容。[Stash 官方文档](https://stash.wiki/script/rewrite-requests) 的 `$done({})` 只保证脚本不修改响应，无法补救脚本之前的 TLS 失败。
+## 性能与保护边界
 
-## 去广告预览版（原生 App 暂停使用）
+- 只处理响应；正文超过 2 MiB 不触发，脚本上限 2 秒。无广告候选标记直接放行，有变化才重新序列化。
+- 非 200、无效 JSON、不支持结构、二进制正文、超出 5 万对象访问预算或脚本内部异常保留原响应。
+- 含不安全数字整数时整段放行，避免 JSON 重写损坏 64 位数字 ID；字符串型 ID 不受影响。
+- 不保证处理视频贴片、软广、缓存广告或新的接口形状。
+- 脚本内部放行无法补救脚本启动前的 TLS 失败、provider 下载故障或宿主超时。离线测试不证明手机延迟和客户端兼容性。
 
-远程导入地址：
+## 依据、验证与许可
 
-```text
-https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/X_remove_ads.stoverride
-```
+`src/x-response.js` 为独立实现，没有从 Loon 原生 App 模块移植成功的依据。之前把网页结构扩大到原生 API 域名缺乏真机验证；当前已撤回。
 
-这是独立的 Stash 模块，可与本仓库的 Bilibili 模块同时启用。启用并信任 Stash HTTPS 解密证书，停用其他改写相同 X 接口的脚本，然后完全退出 X 再打开。当前版本 `2026.10.24-preview.1`，尚未 iPhone/X 真机验收。
+- [fmz200 的 XWebAds 模块](https://github.com/fmz200/wool_scripts/blob/main/Surge/module/XWebAds.module) 明确标注网页版，只添加 `x.com`，处理上述三个网页操作；这是范围依据，不代表作者验证了本仓库模块。
+- [public-clis/twitter-cli 的 parser.py](https://github.com/public-clis/twitter-cli/blob/main/twitter_cli/parser.py)、[Zam157 用户脚本](https://greasyfork.org/en/scripts/465165-fck-x-twitter/code) 与 [gallery-dl 响应样例讨论](https://github.com/mikf/gallery-dl/issues/4790) 为 timeline 结构及推广标记依据。
+- [Stash MitM 文档](https://stash.wiki/http-engine/mitm) 说明解密和证书信任前提；[脚本文档](https://stash.wiki/script/rewrite-requests) 说明 `$done({})` 的透传语义；[覆写文档](https://stash.wiki/configuration/override) 说明数组默认合并及 `#!replace` 全替换行为。
 
-## 范围
-
-对选定的 GraphQL 只读时间线和旧版 REST 时间线 JSON 响应进行过滤，目标包括首页、关注、推文详情/回复、搜索、个人页面、列表、书签和社区中带明确广告标记的条目。匹配的是操作名称，不绑定易变的 GraphQL query-id。
-
-只移除显示容器上的 `promotedMetadata` / `promoted_metadata`，或条目 ID 中明确的 `promoted-tweet/user/trend/account` 标记。混合模块仅删除广告子条目；全部为广告的空模块删除。保留普通媒体、引用推文和转推、置顶、普通关注推荐、顺序及分页游标；不会根据“广告”“赞助”等普通文字判断广告。
-
-模块只处理响应，不修改请求，不查询额外服务器，不写持久化存储，不输出推文或账号日志。脚本约 6 KiB，无运行时依赖。远程脚本按内容版本缓存，配置约 1.4 KiB。
-
-## 性能与边界
-
-- 正文超过 2 MiB 不进入脚本；脚本执行上限 2 秒。无广告候选标记时直接放行，有变化才重新序列化 JSON。
-- 数据结构不支持、格式错误、非 200 响应、二进制正文或遍历超过 5 万节点时保留原响应。
-- 为防 `JSON.parse/stringify` 损坏数字型 64 位 ID，包含不安全整数的响应整段放行；字符串型大 ID 不受影响。部分旧接口因此可能保留广告。
-- 仅处理已列出的 JSON 时间线接口。未覆盖的客户端接口、视频内插播广告、图片里的推广、没有明确标记的软广，以及 App 已缓存的旧数据，可能仍有广告。
-- HTTPS 解密、脚本启动和 JSON 处理都有开销。离线测试不能证明手机延迟、所有 X 版本或所有地区账号的兼容性。若启用后加载异常，先停用 X 模块；进一步定位需要版本和相关接口形状，不需要提供 Cookie 或账号令牌。
-
-## 结构依据及实现
-
-本仓库独立编写 Stash 适配，没有把未经验证的 Loon/Surge 转换标成可用移植版。`src/x-response.js` 是完整源代码，`scripts/build-x.mjs` 生成独立模块和 `scripts/x/<内容版本>/response.js`；`modules/X_remove_ads.manifest.json` 保存 SHA-256。旧的 Bilibili 模块及其行为不变。
-
-以下维护者源码仅作为时间线结构与标记的依据，不代表他们验证了本模块：
-
-- [public-clis/twitter-cli 的 parser.py](https://github.com/public-clis/twitter-cli/blob/main/twitter_cli/parser.py)，`parse_timeline_response` 明确处理 `instructions`、`entries`、`moduleItems`、模块 `items`、`promotedMetadata` 和分页游标。
-- [Zam157 的用户脚本原源码](https://greasyfork.org/en/scripts/465165-fck-x-twitter/code)，处理 `home_timeline_urt`、`threaded_conversation_with_injections_v2` 与推广元数据。这是浏览器脚本，不能作为 iPhone Stash 实测依据。
-- [mikf/gallery-dl 的 Twitter 讨论及原始响应样例](https://github.com/mikf/gallery-dl/issues/4790)，说明推广内容与普通推文共用时间线，来源标记不等于独立广告域名。
-- [Stash 响应脚本接口](https://stash.wiki/script/rewrite-requests)。
-
-离线测试使用手工合成 JSON，覆盖广告识别、普通条目/游标保留、模块及替换指令、旧接口形状、错误透传、大整数保护和只读 URL 匹配。没有登录 X、调用用户账号接口或保存真实用户时间线。
-
-本地实现按仓库 GPL-3.0-only 许可提供。
+`scripts/build-x.mjs` 可重建两个停用版、网页版和 SHA-256 清单。离线验证覆盖撤除配置、网页 URL 边界、JSON 过滤和数据保护，使用合成数据；未登录 X 或取得账号真实流量。源码按仓库 GPL-3.0-only 提供。

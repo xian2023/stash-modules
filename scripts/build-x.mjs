@@ -12,29 +12,37 @@ const name=`x-timeline-ads-${release}`;
 fs.mkdirSync(directory,{recursive:true});
 fs.mkdirSync('modules',{recursive:true});
 fs.writeFileSync(`${directory}/response.js`,script);
-const operations=['HomeTimeline','HomeLatestTimeline','TweetDetail','SearchTimeline','UserTweets','UserTweetsAndReplies','UserMedia','ListLatestTweetsTimeline','Bookmarks','CommunityTweetsTimeline','CommunityMediaTimeline'];
-const graphql=String.raw`^https://(?:api\.)?(?:twitter|x)\.com/(?:i/api/)?graphql/[^/?#]+/(?:${operations.join('|')})(?:\?|$)`;
-const legacy=String.raw`^https://api\.(?:twitter|x)\.com/2/(?:timeline/(?:home|profile/\d+|conversation/\d+|list)|search/adaptive)\.json(?:\?|$)`;
+const homepage=`https://github.com/${repository.owner}/${repository.name}`;
+// Device feedback: even the script-free diagnostic breaks native-app refresh.
+// Retire both old URLs without touching unrelated MitM lists or HTTP hooks.
+const retired={
+  name:'X 原生去广告 · 已停用',
+  desc:'原生 X App 在仅开启 HTTPS 解密、不执行脚本时仍无法加载帖子，原生适配暂停。此版本无解密域名、脚本或规则，不再去广告。请停用旧版和诊断版并重连 Stash；网页版另见 X_Web_remove_ads.stoverride。',
+  category:'兼容性',version:'2026.10.24-preview.2',homepage
+};
+fs.writeFileSync('modules/X_remove_ads.stoverride','# Native-app filter retired after device-confirmed MitM-only failure.\n'+YAML.stringify(retired,{lineWidth:0}));
+fs.writeFileSync('modules/X_remove_ads.manifest.json',JSON.stringify({version:retired.version,release:'disabled',module:'X_remove_ads.stoverride',scripts:{}},null,2)+'\n');
+const diagnostic={
+  name:'X 联通诊断 · 已结束并停用',
+  desc:'真机已确认无脚本的 HTTPS 解密也导致 X 帖子加载失败。诊断结束，此版本不再添加解密域名、脚本或规则。请停用或删除旧诊断版并重连 Stash。',
+  category:'诊断',version:'2026.10.24-diag.2',homepage
+};
+fs.writeFileSync('modules/X_MITM_diagnostic.stoverride','# Diagnostic retired; do not keep the old MitM-only version enabled.\n'+YAML.stringify(diagnostic,{lineWidth:0}));
+
+// Separate opt-in web experiment, matching the published web-only boundary.
+// Do not add native API domains back without a successful transport check.
+const operations=['HomeTimeline','HomeLatestTimeline','TweetDetail'];
+const graphql=String.raw`^https://x\.com/i/api/graphql/[^/?#]+/(?:${operations.join('|')})(?:\?|$)`;
 const config={
-  name:'X 去广告 · 时间线净化',
-  desc:'过滤 X/Twitter 时间线和推文详情内有明确 promoted 标记的广告；保留分页与普通媒体，不额外请求服务器。JSON 接口适配预览，需 iPhone 实测；不能保证移除全部广告。',
-  category:'去广告',version:'2026.10.24-preview.1',
-  homepage:`https://github.com/${repository.owner}/${repository.name}`,
+  name:'X 网页版去广告 · 预览',
+  desc:'仅供 Safari/PWA 的 x.com 网页时间线与详情，过滤明确推广标记；仅解密 x.com，不包含 api.x.com 或 api.twitter.com。不能去除原生 App 广告，尚未本机验证；若影响加载请停用。',
+  category:'去广告',version:'2026.10.24-web-preview.1',homepage,
   http:{
-    mitm:['api.x.com','api.twitter.com','x.com','twitter.com'],
-    script:[graphql,legacy].map(match=>({match,name,type:'response','require-body':true,'binary-mode':false,timeout:2,'max-size':2097152}))
+    mitm:['x.com'],
+    script:[{match:graphql,name,type:'response','require-body':true,'binary-mode':false,timeout:2,'max-size':2097152}]
   },
   'script-providers':{[name]:{url:`${rawBase}/${directory}/response.js`,interval:86400}}
 };
-fs.writeFileSync('modules/X_remove_ads.stoverride','# Independent X/Twitter Stash filter. GPL-3.0-only. See docs/X_AD_FILTER.md.\n'+YAML.stringify(config,{lineWidth:0}));
-fs.writeFileSync('modules/X_remove_ads.manifest.json',JSON.stringify({version:config.version,release,module:'X_remove_ads.stoverride',scripts:{[config['script-providers'][name].url]:sha256}},null,2)+'\n');
-// Isolate connection/HTTPS-engine failures from script startup and JSON changes.
-// This is deliberately the exact same MitM list, with no scripts or rewrites.
-const diagnostic={
-  name:'X 联通诊断 · 不去广告',
-  desc:'仅用于定位帖子加载失败：先停用 X 去广告及其他 X 覆写，再单独启用此项、重连 Stash 并重开 X。仅启用与 preview.1 相同的 HTTPS 解密主机；无脚本、无正文处理、无拦截规则。测试后停用。',
-  category:'诊断',version:'2026.10.24-diag.1',homepage:config.homepage,
-  http:{mitm:[...config.http.mitm]}
-};
-fs.writeFileSync('modules/X_MITM_diagnostic.stoverride','# Temporary connection diagnostic, not an ad blocker.\n'+YAML.stringify(diagnostic,{lineWidth:0}));
-console.log(`Built X module: ${fs.statSync('modules/X_remove_ads.stoverride').size} bytes, script ${Buffer.byteLength(script)} bytes, ${operations.length} GraphQL read operations.`);
+fs.writeFileSync('modules/X_Web_remove_ads.stoverride','# Independent WEB-ONLY X Stash filter. GPL-3.0-only. See docs/X_AD_FILTER.md.\n'+YAML.stringify(config,{lineWidth:0}));
+fs.writeFileSync('modules/X_Web_remove_ads.manifest.json',JSON.stringify({version:config.version,release,module:'X_Web_remove_ads.stoverride',scripts:{[config['script-providers'][name].url]:sha256}},null,2)+'\n');
+console.log(`Retired native X filter and diagnostic; built web-only preview: ${fs.statSync('modules/X_Web_remove_ads.stoverride').size} bytes, script ${Buffer.byteLength(script)} bytes, ${operations.length} GraphQL read operations.`);

@@ -1,5 +1,12 @@
 # Changes
 
+## X 2026.10.24-preview.2 / web-preview.1 / diag.2
+
+- 真机确认：无脚本、仅开启 HTTPS 解密的诊断版仍使原生 X App 无法刷新，日志为 `TLS handshake error from api.twitter.com:443: EOF`；失败发生在握手阶段，具体证书校验或 HTTP 引擎原因尚未确认。
+- 旧去广告与诊断地址撤除所有 HTTP、解密域名、脚本和规则，仅保留停用说明；不使用全局替换，不清空其他模块配置。请停用旧版并重连，或手动更新至停用版后重连。
+- 网页过滤另存为 `X_Web_remove_ads.stoverride`，只添加 `x.com` 解密并处理三个网页操作，不能去除原生 App 广告；尚未本机验收。
+- 广告脚本和 Bilibili 产物保持不变。
+
 ## X 2026.10.24-diag.1
 
 - 收到官方 iPhone App 启用去广告模块后帖子刷新失败、停用后恢复的反馈；撤回原生 App 可用性的预期，根因待真机隔离。

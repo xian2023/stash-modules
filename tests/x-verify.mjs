@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import YAML from 'yaml';
 
 const source=fs.readFileSync('src/x-response.js','utf8');
-const config=YAML.parse(fs.readFileSync('modules/X_remove_ads.stoverride','utf8'));
+const config=YAML.parse(fs.readFileSync('modules/X_Web_remove_ads.stoverride','utf8'));
 const results=[];
 const tests=[];
 const test=(name,fn)=>tests.push([name,fn]);
@@ -16,33 +16,43 @@ const home=entries=>({data:{home:{home_timeline_urt:{instructions:[{type:'Timeli
 function run(value,{status=200,raw=false}={}) {
   const body=raw?value:JSON.stringify(value);let output;let calls=0;let effects=0;
   const forbidden=()=>{effects++;throw Error('Unexpected side effect');};
-  vm.runInNewContext(source,{$response:{status,body},$request:{url:'https://api.x.com/graphql/query/HomeTimeline'},$done:value=>{calls++;output=value;},$httpClient:{get:forbidden,post:forbidden},$persistentStore:{read:forbidden,write:forbidden},console:{log:forbidden},setTimeout:forbidden},{timeout:1000});
+  vm.runInNewContext(source,{$response:{status,body},$request:{url:'https://x.com/i/api/graphql/query/HomeTimeline'},$done:value=>{calls++;output=value;},$httpClient:{get:forbidden,post:forbidden},$persistentStore:{read:forbidden,write:forbidden},console:{log:forbidden},setTimeout:forbidden},{timeout:1000});
   assert.equal(calls,1);assert.equal(effects,0);return {output,body,result:output.body?JSON.parse(output.body):undefined};
 }
 const entries=r=>r.data.home.home_timeline_urt.instructions[0].entries;
-test('Connection diagnostic exactly isolates the existing MitM hosts without any scripts or rules',()=>{
-  const diagnostic=YAML.parse(fs.readFileSync('modules/X_MITM_diagnostic.stoverride','utf8'));
-  assert.deepEqual(diagnostic.http,{mitm:config.http.mitm});
-  assert.deepEqual(Object.keys(diagnostic).sort(),['name','desc','category','version','homepage','http'].sort());
+test('Both old native-app URLs retire all network changes without replacing unrelated configuration',()=>{
+  for(const file of ['X_remove_ads','X_MITM_diagnostic']) {
+    const text=fs.readFileSync(`modules/${file}.stoverride`,'utf8');
+    const retired=YAML.parse(text);
+    assert.deepEqual(Object.keys(retired).sort(),['name','desc','category','version','homepage'].sort());
+    assert(!text.includes('#!replace'));
+    assert(retired.name.includes('停用'));
+  }
+  const manifest=JSON.parse(fs.readFileSync('modules/X_remove_ads.manifest.json'));
+  assert.equal(manifest.release,'disabled');assert.deepEqual(manifest.scripts,{});
 });
-test('Module only intercepts allowlisted read responses, with size/time limits',()=>{
-  assert.deepEqual(config.http.mitm,['api.x.com','api.twitter.com','x.com','twitter.com']);
+test('Web preview restricts MitM to x.com and hooks to three web read operations',()=>{
+  assert.deepEqual(config.http.mitm,['x.com']);
   for(const hook of config.http.script) {assert.equal(hook.type,'response');assert.equal(hook.timeout,2);assert.equal(hook['max-size'],2097152);assert.equal(hook['binary-mode'],false);assert(config['script-providers'][hook.name]);}
   const match=url=>config.http.script.some(h=>new RegExp(h.match).test(url));
-  for(const host of ['api.x.com','api.twitter.com','x.com','twitter.com']) {
-    for(const prefix of ['graphql','i/api/graphql']) for(const op of ['HomeTimeline','HomeLatestTimeline','TweetDetail','SearchTimeline','UserTweets','UserMedia']) assert(match(`https://${host}/${prefix}/query/${op}?variables=x`));
-    for(const op of ['CreateTweet','FavoriteTweet','CreateRetweet','DeleteTweet','CreateBookmark','DmNewMessage','UserByScreenName','Login','HomeTimelineUnexpected']) assert(!match(`https://${host}/graphql/query/${op}`));
+  for(const op of ['HomeTimeline','HomeLatestTimeline','TweetDetail']) {
+    assert(match(`https://x.com/i/api/graphql/query/${op}?variables=x`));
+    assert(match(`https://x.com/i/api/graphql/query/${op}`));
+    for(const host of ['api.x.com','api.twitter.com','twitter.com','x.com.evil.example']) assert(!match(`https://${host}/i/api/graphql/query/${op}`));
+    assert(!match(`https://x.com/graphql/query/${op}`));
   }
-  for(const path of ['2/timeline/home.json','2/timeline/profile/123.json','2/timeline/conversation/123.json','2/search/adaptive.json']) assert(match('https://api.twitter.com/'+path+'?cursor=x'));
+  for(const op of ['CreateTweet','FavoriteTweet','CreateRetweet','DeleteTweet','CreateBookmark','DmNewMessage','UserByScreenName','Login','HomeTimelineUnexpected','SearchTimeline','UserTweets','UserMedia']) assert(!match(`https://x.com/i/api/graphql/query/${op}`));
+  for(const host of ['api.twitter.com','api.x.com']) for(const path of ['2/timeline/home.json','2/timeline/profile/123.json','2/timeline/conversation/123.json','2/search/adaptive.json']) assert(!match(`https://${host}/${path}?cursor=x`));
   assert(!match('https://x.com/home'));assert(!match('https://x.com/login'));assert(!match('https://video.twimg.com/clip.mp4'));assert(!match('https://api.x.com.evil.example/graphql/id/HomeTimeline'));
 });
 test('Published runtime exactly matches source and manifest hash',()=>{
-  const manifest=JSON.parse(fs.readFileSync('modules/X_remove_ads.manifest.json'));
+  const manifest=JSON.parse(fs.readFileSync('modules/X_Web_remove_ads.manifest.json'));
+  assert.equal(Object.keys(manifest.scripts).length,1);
   for(const [url,hash] of Object.entries(manifest.scripts)) {
     const p=new URL(url).pathname.split('/').slice(4).join('/');assert.equal(fs.readFileSync(p,'utf8'),source);
     assert.equal(crypto.createHash('sha256').update(source).digest('hex'),hash);
   }
-  assert(Buffer.byteLength(source)<12000);assert(Buffer.byteLength(fs.readFileSync('modules/X_remove_ads.stoverride'))<3000);
+  assert(Buffer.byteLength(source)<12000);assert(Buffer.byteLength(fs.readFileSync('modules/X_Web_remove_ads.stoverride'))<3000);
 });
 test('Home promoted metadata removed; organic videos, order and cursors preserved',()=>{
   const organic=ordinary();const end=cursor();const r=run(home([ordinary('0'),ad(),organic,end]));

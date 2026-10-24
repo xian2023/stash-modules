@@ -2,10 +2,11 @@
 
 依据：仓库 `upstream/Bilibili_remove_ads.loon-ua.lpx` 第 16、70、72 行及 `upstream/scripts/proto_request.js` 中的 `tt`、`Wt`、`v`、`Lt`、`lt`。原插件标注日期 2026-10-02。
 
-| 行为 | 原 Loon 默认 | Stash preview.3 |
+| 行为 | 原 Loon 默认 | Stash preview.4 |
 | --- | --- | --- |
 | optimizeRequest | true | true |
 | 请求路由 | Viewunite/View、Reply/MainList | 相同 |
+| 楼中楼请求 | 原配置未为 DetailList/DialogList 注册请求脚本 | 本地扩展相同传输兼容；正文原样保留 |
 | 原请求 method/body/业务 headers | 保留 | 保留 |
 | 主机尝试 | 从 grpc 开始时 grpc→app；从 app 开始只尝试 app | 相同 |
 | 每主机超时 | 3 秒，宿主参数 3000 毫秒 | 3 秒，宿主参数 3 |
@@ -20,6 +21,14 @@
 输出响应时显式保留状态/正文，并规范化 `grpc-status`、`grpc-message`、`grpc-status-details-bin`。优先采用可见 trailers，其次响应头；错误状态不改为成功。无可见状态且请求 moss engine 为 1 时，保留原作者补 `grpc-status:0` 的兼容策略，这不是对服务端成功状态的实际观测。
 
 preview.2 的评论直通不等价于 Loon 原版的请求优化。preview.3 将其保留为独立 `Bilibili_passthrough.stoverride` 以供对照，不能和主模块叠加启用。
+
+## 楼中楼扩展
+
+[社区收集的 reply.proto 源码镜像](https://github.com/alittlehuaji/bilibili-api-collect-mirror/blob/master/grpc_api/bilibili/main/community/reply/v1/reply.proto) 将 `DetailList` 定义为二级评论明细、`DialogList` 定义为对话评论树。这是接口名称的源码依据，不是对当前手机请求的抓包证明。
+
+preview.4 为这两个精确路径注册 `tt` 传输处理，不接入 `v` 的 protobuf 拆帧重编码，也不调用一级评论过滤函数 `Lt`。转发收到的 body 字节（包括 gzip 数据）原样返回，仅适配响应头和可见状态；两个主机都失败时放行原请求。不修改 root、rpid、分页游标或未知字段，也不拦截点赞、发评和删评等写入接口。
+
+这修复了已确认的路由覆盖缺口。一级评论改善不能证明楼中楼是同一根因，真实加载速度仍需设备验证。
 
 离线检查采用合成回调，确认代码路径、原始字节、主机顺序、超时单位、gzip 及未知字段保留；不验证 TLS/ALPN、真实 HTTP/2 trailers、内部 HTTP 请求是否重入脚本或手机界面速度。这些仍需客户端验证。
 

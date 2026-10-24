@@ -1,4 +1,4 @@
-// Preserve Loon's optimizeRequest path for View/MainList as well as SponsorBlock.
+// Preserve Loon's optimizeRequest path and extend transport-only relay to replies.
 j.prototype.createRequest = stashObject;
 j.prototype.createResponse = stashObject;
 j.prototype.done = stashDone;
@@ -106,5 +106,9 @@ M = new _({ matchPath: ft });
 M.post("v1.DM/DmSegMobile", Ct, v, $t);
 M.post("viewunite.v1.View/View", tt, v, Vt);
 M.post("v1.Reply/MainList", tt, v, Lt);
+// Nested reply schemas differ from MainList. Relay their exact body bytes;
+// applying Lt or the MainList framing/codec pipeline could lose reply data.
+M.post("v1.Reply/DetailList", tt);
+M.post("v1.Reply/DialogList", tt);
 nt = new q;
 nt.use(st).use(lt).use(at).use(M.routes()).use(M.routeNotMatched());

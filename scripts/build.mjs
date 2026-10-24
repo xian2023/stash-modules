@@ -27,11 +27,11 @@ fs.writeFileSync('output/scripts/bilibili.live.stash.js', bundles['bili-kokoryh-
 
 const config = {
   name: '哔哩哔哩去广告 + 空降助手 · Loon 评论兼容',
-  desc: '恢复 Loon 原版 optimizeRequest 的 View/MainList 请求转发与主机回退。停用旧 B站和可选评论模块后使用。H2/尾部信息及实际加载速度仍需 iPhone 验证。',
+  desc: 'Loon 评论兼容链：View/MainList 及楼中楼 DetailList/DialogList 转发与主机回退；楼中楼正文原样保留。停用旧 B站和可选评论模块。实际速度需 iPhone 验证。',
   icon: 'https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Bilibili.png',
   author: 'kokoryh (original scripts); Kelee (original rules); local Stash adaptation',
   homepage: `https://github.com/${repository.owner}/${repository.name}`,
-  category: '去广告', version: '2026.10.24-preview.3',
+  category: '去广告', version: '2026.10.24-preview.4',
   rules: [
     'DOMAIN,api.biliapi.com,REJECT', 'DOMAIN,app.biliapi.com,REJECT',
     'DOMAIN,api.biliapi.net,REJECT', 'DOMAIN,app.biliapi.net,REJECT',
@@ -88,7 +88,7 @@ const originalResponsePattern = responseLine.match(/~= \/(.*?)\/i then /)[1];
 const commentAlternative = String.raw`|main\.community\.reply\.v1\.Reply\/MainList`;
 if (!originalResponsePattern.includes(commentAlternative)) throw new Error('Upstream comment route changed');
 config.http.script.push({
-  match:String.raw`^https://(?:grpc\.biliapi\.net|app\.bilibili\.com)/bilibili\.(?:app\.viewunite\.v1\.View/View|main\.community\.reply\.v1\.Reply/MainList)$`,
+  match:String.raw`^https://(?:grpc\.biliapi\.net|app\.bilibili\.com)/bilibili\.(?:app\.viewunite\.v1\.View/View|main\.community\.reply\.v1\.Reply/(?:MainList|DetailList|DialogList))$`,
   name:'bili-kokoryh-request',type:'request','require-body':true,'binary-mode':true,
   timeout:10,'max-size':1048576,argument:args
 });

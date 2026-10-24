@@ -71,14 +71,17 @@ test('Passthrough comparison module never intercepts comment requests or respons
     assert.equal(config.http.mock.filter(h=>new RegExp(h.match.replace(/^\(\?i\)/,'')).test(url)).length,0);
   }
 });
-test('Main module restores exactly the Loon View/MainList request relay',()=>{
+test('Main module covers View/MainList and nested DetailList/DialogList request relay',()=>{
   const remote=YAML.parse(read('modules/Bilibili_remove_ads.stoverride'));
   for(const config of [module,remote]) {
-    for(const path of ['main.community.reply.v1.Reply/MainList','app.viewunite.v1.View/View']) {
+    for(const path of ['main.community.reply.v1.Reply/MainList','main.community.reply.v1.Reply/DetailList','main.community.reply.v1.Reply/DialogList','app.viewunite.v1.View/View']) {
       const hooks=config.http.script.filter(h=>h.type==='request'&&new RegExp(h.match.replace(/^\(\?i\)/,'')).test(baseURL+path));
       assert.equal(hooks.length,1);assert.equal(hooks[0].timeout,10);assert.equal(JSON.parse(hooks[0].argument).optimizeRequest,true);
     }
-    assert.equal(config.http.script.filter(h=>new RegExp(h.match.replace(/^\(\?i\)/,'')).test(baseURL+'main.community.reply.v1.Reply/DetailList')).length,0);
+    for(const path of ['main.community.reply.v1.Reply/DetailList','main.community.reply.v1.Reply/DialogList']) {
+      assert.equal(config.http.script.filter(h=>h.type==='response'&&new RegExp(h.match.replace(/^\(\?i\)/,'')).test(baseURL+path)).length,0);
+    }
+    for(const method of ['Like','Add','Delete','PreviewList','ReplyInfo']) assert.equal(config.http.script.filter(h=>new RegExp(h.match.replace(/^\(\?i\)/,'')).test(baseURL+'main.community.reply.v1.Reply/'+method)).length,0);
   }
 });
 test('Remote providers have versioned URLs and exact manifest hashes, no payload',()=>{
@@ -263,6 +266,37 @@ test('Loon relay compressed comments retain unknown wire fields',async()=>{
   const r=await run('request',{url:'main.community.reply.v1.Reply/MainList',network:()=>({data:frame(Buffer.concat([commentMessage(),unknown]),true),response:{status:200,headers:{'grpc-encoding':'gzip'},h2_trailers:{'grpc-status':'0'}}})});
   assert.equal(r.output.response.body[0],0);assert.equal(r.output.response.headers['grpc-status'],'0');assert(Buffer.from(r.output.response.body).includes(unknown));
 });
+
+for(const rpc of ['DetailList','DialogList']) {
+  const path='main.community.reply.v1.Reply/'+rpc;
+  test(`${rpc} relay preserves opaque request and nested reply body bytes`,async()=>{
+    // Include wire fields 11 and 27 that MainList filtering would remove.
+    const body=new Uint8Array([0,0,0,0,2,8,1]);
+    const reply=frame(new Uint8Array([0x5a,2,8,1,0xda,1,2,8,2]));
+    const r=await run('request',{url:path,body,network:()=>({data:reply,response:{status:200,headers:{'content-type':'application/grpc'}}})});
+    assert.equal(r.calls.length,1);assert.equal(r.calls[0].method,'post');assert.equal(r.calls[0].body,body);assert.equal(r.calls[0].timeout,3);assert.equal(r.calls[0]['binary-mode'],true);
+    assert.equal(r.output.response.body,reply);assert.equal(r.output.response.headers['grpc-status'],'0');assert.equal(r.output.response.status,200);
+  });
+  test(`${rpc} gzip frame is not decompressed or re-encoded`,async()=>{
+    const reply=frame(new Uint8Array([0x5a,2,8,1,0xda,1,2,8,2]),true);
+    const r=await run('request',{url:path,network:()=>({data:reply,response:{status:200,headers:{'grpc-encoding':'gzip'},h2_trailers:{'grpc-status':'0'}}})});
+    assert.equal(r.output.response.body,reply);assert.equal(r.output.response.body[0],1);assert.equal(r.output.response.headers['grpc-encoding'],'gzip');
+  });
+  test(`${rpc} grpc host failure retries app host with body preserved`,async()=>{
+    const reply=frame(new Uint8Array([8,123]));
+    const r=await run('request',{url:path,network:(o,m,calls)=>calls.length===1?{error:'first host failed'}:{data:reply,response:{status:200,headers:{}}}});
+    assert.equal(r.calls.length,2);assert(r.calls[0].url.startsWith('https://grpc.biliapi.net/'));assert(r.calls[1].url.startsWith('https://app.bilibili.com/'));assert.equal(r.output.response.body,reply);
+  });
+  test(`${rpc} relay preserves visible gRPC error instead of converting it to success`,async()=>{
+    const reply=frame(new Uint8Array());
+    const r=await run('request',{url:path,network:()=>({data:reply,response:{status:200,headers:{'Grpc-Status':'0'},h2_trailers:{'Grpc-Status':'7','Grpc-Message':'permission denied'}}})});
+    assert.equal(r.calls.length,1);assert.equal(r.output.response.headers['grpc-status'],'7');assert.equal(r.output.response.headers['grpc-message'],'permission denied');assert.equal(r.output.response.body,reply);
+  });
+  test(`${rpc} relay fails open when both hosts fail or optimizeRequest is false`,async()=>{
+    const r=await run('request',{url:path,network:()=>({error:'offline'})});assert.equal(r.calls.length,2);assert.equal(Object.keys(r.output).length,0);
+    const disabled=await run('request',{url:path,argument:{optimizeRequest:false,logLevel:'off'}});assert.equal(disabled.calls.length,0);assert.equal(Object.keys(disabled.output).length,0);
+  });
+}
 
 let passed=0;const results=[];
 for(const [name,fn]of tests){try{await fn();passed++;console.log('PASS',name);results.push({name,passed:true});}catch(error){console.error('FAIL',name,error);results.push({name,passed:false,error:String(error)});}}

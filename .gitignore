@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+evidence/
+output/
+*.log
+*.zip
+.env
+.env.*
+/upstream/Bilibili_remove_ads.lpx
+/upstream/Bilibili_remove_ads.old.stoverride

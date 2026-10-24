@@ -1,0 +1,14 @@
+Original JavaScript and protobuf logic: kokoryh/Sparkle
+https://github.com/kokoryh/Sparkle
+License: GNU General Public License v3.0 (see LICENSE).
+
+Original rule distribution: Kelee
+https://kelee.one/Tool/Loon/Lpx/Bilibili_remove_ads.lpx
+The upstream snapshots used by the builder are preserved under upstream/.
+
+Local Stash compatibility changes: 2026-10-24. Not an upstream release.
+
+gzip implementation: fflate, Arjun Barrett
+License: MIT (see licenses/fflate.LICENSE).
+
+Playback resources are referenced from kokoryh/chronos and are not bundled.

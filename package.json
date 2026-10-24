@@ -1,0 +1,18 @@
+{
+  "name": "bilibili-stash-adaptation-preview",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "npm run build && node tests/verify.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "GPL-3.0-only",
+  "description": "Kelee/kokoryh Bilibili rules adapted for Stash; offline preview",
+  "devDependencies": {
+    "fflate": "^0.8.3",
+    "prettier": "^3.9.10",
+    "yaml": "^2.9.1"
+  },
+  "private": true
+}

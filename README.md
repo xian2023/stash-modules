@@ -1,6 +1,20 @@
 # Stash Modules
 
-供 iPhone Stash 远程导入的模块。当前提供 Bilibili 去广告与空降助手，基于 Kelee 2026-10-02 规则和 kokoryh/Sparkle 脚本适配。
+供 iPhone Stash 远程导入的模块。提供 Bilibili 去广告与空降助手，以及独立的 X/Twitter 时间线去广告。
+
+## X / Twitter 去广告
+
+```text
+https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/X_remove_ads.stoverride
+```
+
+在 Stash 覆写中单独导入，可与 Bilibili 模块同时启用。当前为 `2026.10.24-preview.1`：针对首页、推文详情/回复、搜索等 JSON 时间线中的明确推广标记；保留正常推文、图片/视频和分页游标，不额外请求服务器。需要开启并信任 HTTPS 解密，停用其他处理相同 X 接口的脚本。
+
+模块约 1.4 KiB、脚本约 6 KiB。尚未 iPhone/X 真机验证，不能保证移除全部广告；详见 [范围、性能与兼容说明](docs/X_AD_FILTER.md)。
+
+## Bilibili 去广告与空降
+
+基于 Kelee 2026-10-02 规则和 kokoryh/Sparkle 脚本适配。
 
 **当前版本：2026.10.24-preview.4。保留 Loon 一级评论兼容链，并补充楼中楼请求的传输兼容，空降保留。** 已通过离线模拟测试，尚未完成 iPhone 真机的速度和自动跳转验收。
 

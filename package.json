@@ -2,13 +2,13 @@
   "name": "bilibili-stash-adaptation-preview",
   "version": "1.0.0",
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "test": "npm run build && node tests/verify.mjs"
+    "build": "node scripts/build.mjs && node scripts/build-x.mjs",
+    "test": "npm run build && node tests/verify.mjs && node tests/x-verify.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "GPL-3.0-only",
-  "description": "Kelee/kokoryh Bilibili rules adapted for Stash; offline preview",
+  "description": "Stash Bilibili and X/Twitter filtering modules; reproducible source and offline checks",
   "devDependencies": {
     "fflate": "^0.8.3",
     "prettier": "^3.9.10",

@@ -1,9 +1,9 @@
 # Adapted 2026-10-24. Original: kokoryh/Sparkle (GPL-3.0), Kelee rules.
 # Preview: offline tests only; see README and source package for limitations.
 name: 哔哩哔哩评论去广告 · 可选
-desc: 仅处理评论 MainList 响应，不重发请求、不访问空降服务器。加载慢时先停用此模块；主模块默认评论直通。
+desc: 仅为评论直通对照版补充 MainList 响应过滤。主模块已内置 Loon 评论兼容，勿重复启用。
 category: 去广告
-version: 2026.10.24-preview.2
+version: 2026.10.24-preview.3
 homepage: https://github.com/xian2023/stash-modules
 http:
   mitm:
@@ -11,7 +11,7 @@ http:
     - app.bilibili.com
   script:
     - match: ^https://(?:grpc\.biliapi\.net|app\.bilibili\.com)/bilibili\.main\.community\.reply\.v1\.Reply/MainList$
-      name: bili-kokoryh-response-eadd23627062f196
+      name: bili-kokoryh-response-1756f71bd109cc1e
       type: response
       require-body: true
       binary-mode: true
@@ -19,6 +19,6 @@ http:
       max-size: 1048576
       argument: '{"purifyComment":true,"sponsorBlock":false,"logLevel":"off"}'
 script-providers:
-  bili-kokoryh-response-eadd23627062f196:
-    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/eadd23627062f196/response.js
+  bili-kokoryh-response-1756f71bd109cc1e:
+    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/1756f71bd109cc1e/response.js
     interval: 86400

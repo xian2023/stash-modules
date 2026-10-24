@@ -7,6 +7,7 @@ D.prototype.onerror = function(error) {
 };
 be = stashGunzip;
 kn = stashFraming;
+Rn = stashGrpcStatus;
 
 // The upstream router captured kn only at middleware registration time.
 mn = new H;

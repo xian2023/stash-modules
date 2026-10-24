@@ -21,18 +21,18 @@ function codecs(file, symbols) {
   vm.runInContext(read(file).replace(/(?:nt|mn)\.run\(\);\s*$/, ''),ctx);
   return Object.fromEntries(symbols.map(s=>[s,vm.runInContext(s,ctx)]));
 }
-const req=codecs('output/scripts/bilibili.request.stash.js',['St','_e','le']);
+const req=codecs('output/scripts/bilibili.request.stash.js',['St','_e','le','Ce','stashResponse']);
 const res=codecs('output/scripts/bilibili.response.stash.js',['pt','Mt','tn','Lt','Kt','yn','Ee']);
 function requestBody({pid='170001',oid='111111',type=1,segmentIndex='1',compressed=false}={}) {
   return frame(req.St.toBinary(req.St.create({pid,oid,type,segmentIndex})),compressed);
 }
-async function run(kind, {url,method='POST',body,response,argument,store=new Map(),network}={}) {
+async function run(kind, {url,method='POST',body,headers,response,argument,store=new Map(),network}={}) {
   const source=read(`output/scripts/bilibili.${kind}.stash.js`);
   const calls=[]; const logs=[];
   let doneCount=0; let resolveDone;
   const done=new Promise(resolve=>resolveDone=resolve);
   const ctx={...globals,console:{log:(...args)=>logs.push(args.join(' '))},
-    $request:{url:url?.startsWith('https://')?url:baseURL+(url||'community.service.dm.v1.DM/DmSegMobile'),method,headers:{'content-type':'application/grpc','x-bili-moss-engine-type':'1'},body:body??requestBody()},
+    $request:{url:url?.startsWith('https://')?url:baseURL+(url||'community.service.dm.v1.DM/DmSegMobile'),method,headers:headers??{'content-type':'application/grpc','x-bili-moss-engine-type':'1'},body:body??requestBody()},
     $argument:JSON.stringify(argument??{displayUpList:'show',purifyComment:true,sponsorBlock:true,logLevel:'off'}),
     $persistentStore:{read:k=>store.get(k)??null,write:(v,k)=>(store.set(k,v),true)},
     $httpClient:{},$notification:{post(){}},$done:value=>{doneCount++;resolveDone(value);}
@@ -55,20 +55,30 @@ const segments=JSON.stringify([{actionType:'skip',segment:[10,30]}]);
 const successNetwork=(o,m)=>m==='get'?{data:segments,response:{status:200,headers:{}}}:{data:frame(req._e.toBinary(req._e.create({elems:[]}))),response:{status:200,headers:{'content-type':'application/grpc','grpc-status':'0'}}};
 
 test('Module YAML, unique script names, body limits, no old provider dependencies',()=>{
-  assert.equal(module.http.script.length,3);
+  assert.equal(module.http.script.length,4);
   for(const hook of module.http.script) {
-    assert(module['script-providers'][hook.name]); assert(hook['max-size']>0); assert(hook.timeout<=6);
+    assert(module['script-providers'][hook.name]); assert(hook['max-size']>0); assert(hook.timeout<=10);
     new RegExp(hook.match.replace(/^\(\?i\)/,''));
   }
   assert(!read('output/Bilibili_remove_ads.stoverride').includes('gitlab.com'));
   for(const value of Object.values(module['script-providers'])) new vm.Script(value.payload);
 });
-test('Default modules never intercept comment requests or responses',()=>{
-  const remote=YAML.parse(read('modules/Bilibili_remove_ads.stoverride'));
-  for(const config of [module,remote]) for(const host of ['grpc.biliapi.net','app.bilibili.com']) for(const method of ['MainList','DetailList','DialogList']) {
+test('Passthrough comparison module never intercepts comment requests or responses',()=>{
+  const remote=YAML.parse(read('modules/Bilibili_passthrough.stoverride'));
+  for(const config of [remote]) for(const host of ['grpc.biliapi.net','app.bilibili.com']) for(const method of ['MainList','DetailList','DialogList']) {
     const url=`https://${host}/bilibili.main.community.reply.v1.Reply/${method}`;
     assert.equal(config.http.script.filter(h=>new RegExp(h.match.replace(/^\(\?i\)/,'')).test(url)).length,0);
     assert.equal(config.http.mock.filter(h=>new RegExp(h.match.replace(/^\(\?i\)/,'')).test(url)).length,0);
+  }
+});
+test('Main module restores exactly the Loon View/MainList request relay',()=>{
+  const remote=YAML.parse(read('modules/Bilibili_remove_ads.stoverride'));
+  for(const config of [module,remote]) {
+    for(const path of ['main.community.reply.v1.Reply/MainList','app.viewunite.v1.View/View']) {
+      const hooks=config.http.script.filter(h=>h.type==='request'&&new RegExp(h.match.replace(/^\(\?i\)/,'')).test(baseURL+path));
+      assert.equal(hooks.length,1);assert.equal(hooks[0].timeout,10);assert.equal(JSON.parse(hooks[0].argument).optimizeRequest,true);
+    }
+    assert.equal(config.http.script.filter(h=>new RegExp(h.match.replace(/^\(\?i\)/,'')).test(baseURL+'main.community.reply.v1.Reply/DetailList')).length,0);
   }
 });
 test('Remote providers have versioned URLs and exact manifest hashes, no payload',()=>{
@@ -207,6 +217,51 @@ test('Comment protobuf ads removed while unknown comments are retained',async()=
   const data=res.tn.create({cm:new Uint8Array([1]),mixedCards:[new Uint8Array([2])],topReplies:[],subjectTopCards:[]});
   const r=await run('response',{url:'main.community.reply.v1.Reply/MainList',response:{status:200,headers:{},body:frame(res.tn.toBinary(data))}});
   const out=res.tn.fromBinary(r.output.body.subarray(5));assert.equal(out.cm,undefined);assert.equal(out.mixedCards.length,0);
+});
+
+const commentMessage=()=>res.tn.toBinary(res.tn.create({cm:new Uint8Array([1]),mixedCards:[new Uint8Array([2])],topReplies:[],subjectTopCards:[]}));
+test('Loon MainList request relay preserves request bytes, filters ads and never queries SponsorBlock',async()=>{
+  const body=new Uint8Array([0,1,2,3]);
+  const r=await run('request',{url:'main.community.reply.v1.Reply/MainList',body,network:()=>({data:frame(commentMessage()),response:{status:200,headers:{'content-type':'application/grpc'}}})});
+  assert.equal(r.calls.length,1);assert.equal(r.calls[0].method,'post');assert.equal(r.calls[0].url,baseURL+'main.community.reply.v1.Reply/MainList');
+  assert.equal(r.calls[0].timeout,3);assert.equal(r.calls[0]['binary-mode'],true);assert.equal(r.calls[0].body,body);
+  assert.equal(r.output.response.status,200);assert.equal(r.output.response.headers['grpc-status'],'0');
+  const out=res.tn.fromBinary(r.output.response.body.subarray(5));assert.equal(out.cm,undefined);assert.equal(out.mixedCards.length,0);
+});
+test('Loon MainList relay retries app.bilibili.com after grpc host failure',async()=>{
+  const r=await run('request',{url:'main.community.reply.v1.Reply/MainList',network:(o,m,calls)=>calls.length===1?{error:'grpc host failed'}:{data:frame(commentMessage()),response:{status:200,headers:{}}}});
+  assert.equal(r.calls.length,2);assert(r.calls[0].url.startsWith('https://grpc.biliapi.net/'));assert(r.calls[1].url.startsWith('https://app.bilibili.com/'));
+  assert(r.calls.every(c=>c.timeout===3));assert(r.output.response);
+});
+test('Loon MainList relay fails open after both hosts fail',async()=>{
+  const r=await run('request',{url:'main.community.reply.v1.Reply/MainList',network:()=>({error:'offline'})});
+  assert.equal(r.calls.length,2);assert.equal(Object.keys(r.output).length,0);
+});
+test('Loon relay starting on app host does not retry the earlier grpc host',async()=>{
+  const r=await run('request',{url:'https://app.bilibili.com/bilibili.main.community.reply.v1.Reply/MainList',network:()=>({error:'offline'})});
+  assert.equal(r.calls.length,1);assert(r.calls[0].url.startsWith('https://app.bilibili.com/'));assert.equal(Object.keys(r.output).length,0);
+});
+test('Loon optimizeRequest false prevents relay and added requests',async()=>{
+  const r=await run('request',{url:'main.community.reply.v1.Reply/MainList',argument:{optimizeRequest:false,logLevel:'off'}});
+  assert.equal(r.calls.length,0);assert.equal(Object.keys(r.output).length,0);
+});
+test('Loon Viewunite request relay preserves the upstream purification path',async()=>{
+  const data=req.Ce.toBinary(req.Ce.create({cm:new Uint8Array([1])}));
+  const r=await run('request',{url:'app.viewunite.v1.View/View',network:()=>({data:frame(data),response:{status:200,headers:{}}})});
+  assert.equal(r.calls.length,1);assert(r.output.response);assert.equal(req.Ce.fromBinary(r.output.response.body.subarray(5)).cm,undefined);
+});
+test('Loon engine type status workaround handles mixed-case request header',async()=>{
+  const r=await run('request',{url:'main.community.reply.v1.Reply/MainList',headers:{'X-Bili-Moss-Engine-Type':'1'},network:()=>({data:frame(commentMessage()),response:{status:200,headers:{}}})});
+  assert.equal(r.output.response.headers['grpc-status'],'0');
+});
+test('gRPC trailer metadata is promoted with errors preserved',()=>{
+  const out=req.stashResponse({status:200,headers:{'Grpc-Status':'0','Grpc-Message':'old'},h2_trailers:{'Grpc-Status':'7','grpc-message':'permission denied','grpc-status-details-bin':'AA=='},body:frame(new Uint8Array())});
+  assert.equal(out.headers['grpc-status'],'7');assert.equal(out.headers['grpc-message'],'permission denied');assert.equal(out.headers['grpc-status-details-bin'],'AA==');assert.equal(out.headers['Grpc-Status'],undefined);
+});
+test('Loon relay compressed comments retain unknown wire fields',async()=>{
+  const unknown=Buffer.from([0xa0,0x06,0x7b]);
+  const r=await run('request',{url:'main.community.reply.v1.Reply/MainList',network:()=>({data:frame(Buffer.concat([commentMessage(),unknown]),true),response:{status:200,headers:{'grpc-encoding':'gzip'},h2_trailers:{'grpc-status':'0'}}})});
+  assert.equal(r.output.response.body[0],0);assert.equal(r.output.response.headers['grpc-status'],'0');assert(Buffer.from(r.output.response.body).includes(unknown));
 });
 
 let passed=0;const results=[];

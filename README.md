@@ -2,7 +2,7 @@
 
 供 iPhone Stash 远程导入的模块。当前提供 Bilibili 去广告与空降助手，基于 Kelee 2026-10-02 规则和 kokoryh/Sparkle 脚本适配。
 
-**当前版本：2026.10.24-preview.2。默认跳过评论接口，空降保留。** 已通过离线模拟测试，尚未完成 iPhone 真机的速度和自动跳转验收。
+**当前版本：2026.10.24-preview.3。恢复 Loon 原版默认开启的评论请求兼容链路，空降保留。** 已通过离线模拟测试，尚未完成 iPhone 真机的速度和自动跳转验收。
 
 ## 导入
 
@@ -12,29 +12,31 @@
 https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_remove_ads.stoverride
 ```
 
-关闭以前导入的 B站去广告覆写，包括旧的本地预览模块；开启 HTTPS 解密并完全信任 Stash CA 证书，随后完全退出 Bilibili 再打开。
+关闭以前导入的 B站去广告覆写，包括旧的本地预览模块和「评论去广告 · 可选」；只启用本主模块。开启 HTTPS 解密并完全信任 Stash CA 证书，随后完全退出 Bilibili 再打开。已订阅同一地址时，刷新覆写并确认版本为 `2026.10.24-preview.3`。
 
 主模块约 13 KiB，脚本单独下载并缓存，避免把大量 JS 内嵌在覆写配置里。模块及脚本均使用 HTTPS。新脚本使用内容版本目录和新的 provider 名称，以免更新配置后混用旧缓存。
 
 ## 评论加载慢
 
-本版默认不匹配评论的 MainList / DetailList / DialogList 接口：不启动评论 JS，不复制评论正文，不重新请求评论，也不为评论查询第三方服务器。评论置顶推广可能重新显示。
+Loon 原插件的 `optimizeRequest=true` 默认启用：它对评论 MainList 和视频详情 View 发起脚本请求，原主机失败时尝试备用主机，然后按原作者的 protobuf 逻辑处理并返回。此前 preview.2 将评论直通当作降低开销的方案，省略了这条传输兼容链路，与原 Loon 默认行为不等价。
 
-这是针对脚本处理开销的调整，不是已确定手机卡顿根因。主模块仍需对 B站相关主机进行 HTTPS 解密；如果停用旧模块、只启用主模块后仍慢，还需要结合 Stash/Bilibili 版本、耗时日志及原配置分流检查。
+本版恢复原主机顺序、每站 3 秒、总 hook 10 秒，以及 gRPC 状态适配。评论请求不查询空降服务器。成功时返回脚本得到的响应，不再发送原始请求；两站失败或格式不支持时继续原始请求。失败路径仍可能增加等待，不能把恢复逻辑当作保证加速。
 
-只有需要评论区去广告时，再单独添加下面的**可选模块**：
+Stash 的响应改写必须在响应交给 App 前完成，`$done` 结束脚本，结束后的定时器会取消；不能通过同一次请求先显示评论、之后再改写已显示内容。本版没有引入队列或后台 cron，也没有以牺牲首次空降换取等待减少。
 
 ```text
-https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_comments_optional.stoverride
+https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_passthrough.stoverride
 ```
 
-可选模块仅处理 MainList 响应，限正文 1 MiB、执行 1 秒，不重发评论请求。它会增加正文等待和脚本执行开销；加载慢时先停用此模块。
+以上是保留的**评论直通对照版**，与主模块只选一个，用于判断请求兼容链路是否影响当前设备。它不执行评论 JS，不转发评论请求；并不绕过所在域名的 HTTPS 解密。`Bilibili_comments_optional.stoverride` 仅供该对照版额外过滤 MainList 响应，主模块已包含评论处理，不应重复启用。
+
+Loon 的脚本客户端明确设置 `alpn=h2` 并可读取 `h2_trailers`；Stash 官方接口没有承诺这两个选项。当前只做已公开 API 的适配，保留可见错误状态，不能声称已经复制了真实 HTTP/2 连接行为。详见 [Loon 兼容说明](docs/LOON_COMPATIBILITY.md)。若本版仍慢，需要真实的 Stash/Bilibili 版本与请求耗时，不能仅凭代码推断根因。
 
 ## 远程更新
 
 在 Stash 中刷新远程覆写，可获取仓库 `main` 分支上的新配置。脚本 provider 设置 `interval: 86400`，由 Stash 定期检查脚本；改动脚本后，新配置会引用新的内容版本目录。GitHub Raw 缓存可能导致更新短暂延迟。
 
-请保留上面这两个固定地址，日后修复继续更新同一地址。仓库没有后台自动追踪上游代码，也不会自动给现有对话发送消息。
+请保留需要的固定地址，日后修复继续更新同一地址。仓库没有后台自动追踪上游代码，也不会自动给现有对话发送消息。
 
 ## 空降助手
 
@@ -56,7 +58,7 @@ npm ci
 npm test
 ```
 
-离线测试覆盖 YAML/jq、评论接口默认直通、远程文件哈希、gzip/gRPC、空降标记、缓存损坏、超时回退及未知字段保留。测试使用合成请求，不代表手机 HTTP/2 转发、播放器兼容、实际跳转和耗电已验证。GitHub Actions 在每次推送及 PR 时运行相同检查，不自动发布未测试的上游更新。
+离线测试覆盖 YAML/jq、Loon 评论请求转发与备用主机、对照版评论直通、远程文件哈希、gzip/gRPC、真实错误状态保留、空降标记、缓存损坏、超时回退及未知字段保留。测试使用合成请求，不代表手机 HTTP/2 转发、播放器兼容、实际跳转和耗电已验证。GitHub Actions 在每次推送及 PR 时运行相同检查，不自动发布未测试的上游更新。
 
 请勿手动覆盖已有的内容版本脚本。修改 `src/` 或构建逻辑并执行 `npm test`，将新模块及新目录在同一次提交中发布。
 

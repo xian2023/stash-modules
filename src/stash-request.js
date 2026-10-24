@@ -1,5 +1,4 @@
-// Only DmSegMobile is intercepted. View/Reply replay is deliberately not enabled
-// in the default override: the normal response script already handles their ads.
+// Preserve Loon's optimizeRequest path for View/MainList as well as SponsorBlock.
 j.prototype.createRequest = stashObject;
 j.prototype.createResponse = stashObject;
 j.prototype.done = stashDone;
@@ -9,6 +8,13 @@ F.prototype.onerror = function(error) {
 };
 W = stashGunzip;
 v = stashFraming;
+lt = stashGrpcStatus;
+tt = async (context, next) => {
+  if (context.argument.optimizeRequest === false) ue();
+  // Retain status, binary body, headers and any trailers supplied by Stash.
+  context.response = stashObject(await Wt(context));
+  return next();
+};
 
 const STASH_SB_KEY = "bili.stash.sponsor.v1";
 function stashCacheRead() {
@@ -98,5 +104,7 @@ Ct = async (context, next) => {
 // Rebuild the routes because the upstream router stored the original functions.
 M = new _({ matchPath: ft });
 M.post("v1.DM/DmSegMobile", Ct, v, $t);
+M.post("viewunite.v1.View/View", tt, v, Vt);
+M.post("v1.Reply/MainList", tt, v, Lt);
 nt = new q;
 nt.use(st).use(lt).use(at).use(M.routes()).use(M.routeNotMatched());

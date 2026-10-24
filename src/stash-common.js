@@ -14,15 +14,26 @@ function stashHeader(headers, key) {
 function stashResponse(value) {
   const headers = {};
   for (const [key, val] of Object.entries(value.headers || {})) {
-    if (!["content-length", "content-encoding", "transfer-encoding", "grpc-encoding", "grpc-status"].includes(key.toLowerCase())) headers[key] = val;
+    if (!["content-length", "content-encoding", "transfer-encoding", "grpc-encoding", "grpc-status", "grpc-message", "grpc-status-details-bin"].includes(key.toLowerCase())) headers[key] = val;
   }
   const body = value.body;
   if (body instanceof Uint8Array && body.length >= 5) {
     headers["grpc-encoding"] = body[0] === 0 ? "identity" : (stashHeader(value.headers, "grpc-encoding") || "gzip");
   }
-  const grpcStatus = stashHeader(value.h2_trailers, "grpc-status") ?? stashHeader(value.headers, "grpc-status");
-  if (grpcStatus !== undefined) headers["grpc-status"] = String(grpcStatus);
+  for (const name of ["grpc-status", "grpc-message", "grpc-status-details-bin"]) {
+    const trailer = stashHeader(value.h2_trailers, name) ?? stashHeader(value.headers, name);
+    if (trailer !== undefined) headers[name] = String(trailer);
+  }
   return { status: value.status ?? value.statusCode ?? 200, headers, body };
+}
+async function stashGrpcStatus(context, next) {
+  await next();
+  // Mirror Loon's engine-type=1 success-header workaround, with case-insensitive
+  // lookup. A supplied status (especially an error) must never be overwritten.
+  if (stashHeader(context.response.h2_trailers, "grpc-status") !== undefined) return;
+  if (stashHeader(context.response.headers, "grpc-status") !== undefined) return;
+  if (String(stashHeader(context.request.headers, "x-bili-moss-engine-type")) !== "1") return;
+  context.response.headers = { ...(context.response.headers || {}), "grpc-status": "0" };
 }
 function stashDone(value) {
   if (value.response) return $done({ response: stashResponse(value.response) });

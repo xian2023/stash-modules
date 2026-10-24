@@ -26,12 +26,12 @@ bundles['bili-kokoryh-live'] = notice + read('upstream/scripts/live_json.js');
 fs.writeFileSync('output/scripts/bilibili.live.stash.js', bundles['bili-kokoryh-live']);
 
 const config = {
-  name: '哔哩哔哩去广告 + 空降助手 · 评论直通',
-  desc: '基于 Kelee / kokoryh；默认不处理评论接口，空降带缓存和失败回退。先停用旧 B站模块并开启 HTTPS 解密。已离线验证，评论速度及自动空降仍需 iPhone 实测。',
+  name: '哔哩哔哩去广告 + 空降助手 · Loon 评论兼容',
+  desc: '恢复 Loon 原版 optimizeRequest 的 View/MainList 请求转发与主机回退。停用旧 B站和可选评论模块后使用。H2/尾部信息及实际加载速度仍需 iPhone 验证。',
   icon: 'https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Bilibili.png',
   author: 'kokoryh (original scripts); Kelee (original rules); local Stash adaptation',
   homepage: `https://github.com/${repository.owner}/${repository.name}`,
-  category: '去广告', version: '2026.10.24-preview.2',
+  category: '去广告', version: '2026.10.24-preview.3',
   rules: [
     'DOMAIN,api.biliapi.com,REJECT', 'DOMAIN,app.biliapi.com,REJECT',
     'DOMAIN,api.biliapi.net,REJECT', 'DOMAIN,app.biliapi.net,REJECT',
@@ -77,7 +77,7 @@ for (const line of original.split('\n')) {
   } else throw new Error('Unhandled Loon rewrite: ' + line);
   mapping.push({loon:line,stash:converted});
 }
-const args = JSON.stringify({displayUpList:'show',purifyComment:true,sponsorBlock:true,logLevel:'off'});
+const args = JSON.stringify({displayUpList:'show',purifyComment:true,optimizeRequest:true,sponsorBlock:true,logLevel:'off'});
 config.http.script.push({
   match: '^https://(?:grpc\\.biliapi\\.net|app\\.bilibili\\.com)/bilibili\\.community\\.service\\.dm\\.v1\\.DM/DmSegMobile$',
   name: 'bili-kokoryh-request', type: 'request', 'require-body': true, 'binary-mode': true,
@@ -87,9 +87,13 @@ const responseLine = original.split('\n').find(l=>l.startsWith('response if ') &
 const originalResponsePattern = responseLine.match(/~= \/(.*?)\/i then /)[1];
 const commentAlternative = String.raw`|main\.community\.reply\.v1\.Reply\/MainList`;
 if (!originalResponsePattern.includes(commentAlternative)) throw new Error('Upstream comment route changed');
-const responsePattern = originalResponsePattern.replace(commentAlternative, '');
 config.http.script.push({
-  match: '(?i)' + responsePattern,
+  match:String.raw`^https://(?:grpc\.biliapi\.net|app\.bilibili\.com)/bilibili\.(?:app\.viewunite\.v1\.View/View|main\.community\.reply\.v1\.Reply/MainList)$`,
+  name:'bili-kokoryh-request',type:'request','require-body':true,'binary-mode':true,
+  timeout:10,'max-size':1048576,argument:args
+});
+config.http.script.push({
+  match: '(?i)' + originalResponsePattern,
   name: 'bili-kokoryh-response', type: 'response', 'require-body': true, 'binary-mode': true,
   timeout: 3, 'max-size': 4194304, argument: args
 });
@@ -122,10 +126,19 @@ for (const [i,[name,payload]] of Object.entries(bundles).entries()) {
 }
 for (const hook of remote.http.script) hook.name += `-${release}`;
 fs.writeFileSync('modules/Bilibili_remove_ads.stoverride',header + YAML.stringify(remote,{lineWidth:0}));
+// Keep the prior behavior available as a mutually exclusive diagnostic option.
+const passthrough = structuredClone(remote);
+passthrough.name = '哔哩哔哩去广告 + 空降助手 · 评论直通对照';
+passthrough.desc = '不使用 Loon 的 View/MainList 请求转发，评论不执行 JS。仅供与主模块二选一排查；不是后台异步改写。';
+passthrough.http.script = passthrough.http.script.filter(h=>!h.match.includes('(?:app\\.viewunite'));
+for (const hook of passthrough.http.script) {
+  if (hook.type === 'response' && hook['binary-mode']) hook.match = '(?i)' + originalResponsePattern.replace(commentAlternative, '');
+}
+fs.writeFileSync('modules/Bilibili_passthrough.stoverride',header + YAML.stringify(passthrough,{lineWidth:0}));
 const commentProviderName = `bili-kokoryh-response-${release}`;
 const comments = {
   name:'哔哩哔哩评论去广告 · 可选',
-  desc:'仅处理评论 MainList 响应，不重发请求、不访问空降服务器。加载慢时先停用此模块；主模块默认评论直通。',
+  desc:'仅为评论直通对照版补充 MainList 响应过滤。主模块已内置 Loon 评论兼容，勿重复启用。',
   category:'去广告',version:config.version,homepage:config.homepage,
   http:{mitm:['grpc.biliapi.net','app.bilibili.com'],script:[{
     match:String.raw`^https://(?:grpc\.biliapi\.net|app\.bilibili\.com)/bilibili\.main\.community\.reply\.v1\.Reply/MainList$`,
@@ -135,7 +148,7 @@ const comments = {
   'script-providers':{[commentProviderName]:remote['script-providers'][commentProviderName]}
 };
 fs.writeFileSync('modules/Bilibili_comments_optional.stoverride',header + YAML.stringify(comments,{lineWidth:0}));
-fs.writeFileSync('modules/manifest.json',JSON.stringify({version:config.version,release,modules:['Bilibili_remove_ads.stoverride','Bilibili_comments_optional.stoverride'],scripts:Object.fromEntries(Object.values(remote['script-providers']).map(p=>[p.url,crypto.createHash('sha256').update(read(p.url.slice(rawBase.length+1))).digest('hex')]))},null,2)+'\n');
+fs.writeFileSync('modules/manifest.json',JSON.stringify({version:config.version,release,modules:['Bilibili_remove_ads.stoverride','Bilibili_passthrough.stoverride','Bilibili_comments_optional.stoverride'],scripts:Object.fromEntries(Object.values(remote['script-providers']).map(p=>[p.url,crypto.createHash('sha256').update(read(p.url.slice(rawBase.length+1))).digest('hex')]))},null,2)+'\n');
 fs.writeFileSync('evidence/rule-mapping.json', JSON.stringify(mapping,null,2));
 const hashes = {};
 for (const folder of ['upstream','upstream/scripts','upstream/jq','output/scripts']) {

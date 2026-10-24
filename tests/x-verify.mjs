@@ -20,6 +20,11 @@ function run(value,{status=200,raw=false}={}) {
   assert.equal(calls,1);assert.equal(effects,0);return {output,body,result:output.body?JSON.parse(output.body):undefined};
 }
 const entries=r=>r.data.home.home_timeline_urt.instructions[0].entries;
+test('Connection diagnostic exactly isolates the existing MitM hosts without any scripts or rules',()=>{
+  const diagnostic=YAML.parse(fs.readFileSync('modules/X_MITM_diagnostic.stoverride','utf8'));
+  assert.deepEqual(diagnostic.http,{mitm:config.http.mitm});
+  assert.deepEqual(Object.keys(diagnostic).sort(),['name','desc','category','version','homepage','http'].sort());
+});
 test('Module only intercepts allowlisted read responses, with size/time limits',()=>{
   assert.deepEqual(config.http.mitm,['api.x.com','api.twitter.com','x.com','twitter.com']);
   for(const hook of config.http.script) {assert.equal(hook.type,'response');assert.equal(hook.timeout,2);assert.equal(hook['max-size'],2097152);assert.equal(hook['binary-mode'],false);assert(config['script-providers'][hook.name]);}

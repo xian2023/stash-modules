@@ -1,5 +1,27 @@
 # X/Twitter 去广告覆写
 
+**当前状态：iPhone 官方 X App 已反馈启用后帖子刷新失败，停用后恢复。请先保持去广告模块停用。尚未确认是 HTTPS 解密、脚本启动还是正文修改，不能把此版本标为原生 App 可用。**
+
+## 帖子无法加载时的联通诊断
+
+诊断地址（此项不去广告）：
+
+```text
+https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/X_MITM_diagnostic.stoverride
+```
+
+1. 保持 `X_remove_ads` 和其他处理 X 的覆写停用，单独添加并启用诊断版。已有 Bilibili 模块可保留。
+2. 重新连接 Stash，然后完全退出 X 再打开，刷新一次首页。
+3. 记录能否加载。失败则立即停用诊断版并重连 Stash，恢复正常使用。测试后也应停用诊断版。
+
+诊断版只有与原模块完全相同的四个 MitM 域名，没有脚本、provider、正文缓冲/改写、拦截或分流规则。如果它同样导致失败，说明在不执行广告脚本时连接已失败，应查看 Stash 的相关连接错误（TLS、证书、HTTP 引擎或网络），不应继续猜改 JSON；这本身仍不能证明是证书锁定。如果诊断版正常，则继续定位脚本下载、执行环境与改写后的响应。
+
+反馈只需“诊断版正常/仍失败”、X 和 Stash 版本，以及错误类型。不要分享请求头、Cookie、Authorization、完整 URL 查询参数或时间线正文。
+
+现有公开规则也有明确的适用边界：[fmz200 的 XWebAds 模块](https://github.com/fmz200/wool_scripts/blob/main/Surge/module/XWebAds.module) 标为网页版，解密域名仅为 `x.com`。本仓库先前扩大到原生 API 域名没有真机依据，不能从网页过滤逻辑推断原生兼容。[Stash 官方文档](https://stash.wiki/script/rewrite-requests) 的 `$done({})` 只保证脚本不修改响应，无法补救脚本之前的 TLS 失败。
+
+## 去广告预览版（原生 App 暂停使用）
+
 远程导入地址：
 
 ```text

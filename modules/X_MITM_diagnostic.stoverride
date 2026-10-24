@@ -1,0 +1,12 @@
+# Temporary connection diagnostic, not an ad blocker.
+name: X 联通诊断 · 不去广告
+desc: 仅用于定位帖子加载失败：先停用 X 去广告及其他 X 覆写，再单独启用此项、重连 Stash 并重开 X。仅启用与 preview.1 相同的 HTTPS 解密主机；无脚本、无正文处理、无拦截规则。测试后停用。
+category: 诊断
+version: 2026.10.24-diag.1
+homepage: https://github.com/xian2023/stash-modules
+http:
+  mitm:
+    - api.x.com
+    - api.twitter.com
+    - x.com
+    - twitter.com

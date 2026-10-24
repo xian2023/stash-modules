@@ -4,6 +4,8 @@
 
 ## X / Twitter 去广告
 
+**兼容性警告：已收到 iPhone X 官方 App 启用后帖子刷新失败、停用恢复的反馈。原生 App 用户请暂时停用此模块；离线检查通过不代表真机可用。正在通过 [联通诊断](docs/X_AD_FILTER.md#帖子无法加载时的联通诊断) 区分 HTTPS 解密与脚本问题，尚未确认根因。**
+
 ```text
 https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/X_remove_ads.stoverride
 ```

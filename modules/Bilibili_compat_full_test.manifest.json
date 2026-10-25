@@ -4,7 +4,8 @@
   "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_compat_full_test.stoverride",
   "sha256": "bdfc9e53c726817ec0d29450b678524ef4e0a0174466a570e4aecb3e0c150939",
   "exclusive": true,
-  "deviceStatus": "awaiting-test",
+  "deviceStatus": "user-reported-normal-except-video-ads",
+  "deviceNote": "User reports other behavior normal. Screenshot shows an under-player download advertisement and an advertisement in related recommendations. Transport origin and airborne operation not individually confirmed.",
   "baseline": {
     "module": "modules/Bilibili_app_compat.stoverride",
     "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_app_compat.stoverride",

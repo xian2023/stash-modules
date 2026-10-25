@@ -55,7 +55,8 @@ export function buildFullCompatibility(main,rawBase) {
   }
   const chronos=JSON.parse(fs.readFileSync('modules/chronos.manifest.json','utf8'));
   fs.writeFileSync('modules/Bilibili_compat_full_test.manifest.json',JSON.stringify({
-    version:config.version,module,url:`${rawBase}/${module}`,sha256:sha(text),exclusive:true,deviceStatus:'awaiting-test',
+    version:config.version,module,url:`${rawBase}/${module}`,sha256:sha(text),exclusive:true,deviceStatus:'user-reported-normal-except-video-ads',
+    deviceNote:'User reports other behavior normal. Screenshot shows an under-player download advertisement and an advertisement in related recommendations. Transport origin and airborne operation not individually confirmed.',
     baseline:baseline('modules/Bilibili_app_compat.stoverride'),previousTest:baseline('modules/Bilibili_app_test_01_feed.stoverride'),
     source:baseline('modules/Bilibili_remove_ads.stoverride'),
     scripts,assets:{[chronos.url]:chronos.sha256},

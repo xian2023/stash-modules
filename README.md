@@ -44,6 +44,14 @@ https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_c
 
 实际走 grpc 的请求仍直通，对应广告可能保留。空降需 ViewProgress 走 app 域名并成功加载播放器资源；当前不是“全部广告保证去除”的真机验收版本。
 
+当前用户反馈完整兼容测试其他表现正常，但视频下方下载横幅和相关推荐里的广告卡仍在。尚未确认请求来源；需要临时诊断时使用独立地址：
+
+```text
+https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_banner_diagnostic.stoverride
+```
+
+这是 `2026.10.25-banner-diag.1`，过滤规则和解密域名与完整兼容测试相同，仅给五条详情/关联响应加本机摘要日志。**停用其他 B站覆写，只开诊断版，完全退出 B站并重连后复现一次，然后在脚本日志中搜索 `BiliBanner`。** 不是横幅修复版；诊断结束切回完整兼容测试。[日志说明与解释边界](docs/BILIBILI_DIAGNOSIS.md)。
+
 ### 保留对照：独立功能测试 01
 
 此前测试 01 仅恢复 **app 域名的热门、动态、搜索响应过滤**，地址保留作对照：

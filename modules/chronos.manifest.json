@@ -1,0 +1,10 @@
+{
+  "upstream": "upstream/chronos/e5a968f1a5055bbe5c12e67b100a6dcb.zip",
+  "upstreamSha256": "c82d74ac16e2d1ecb82f8f3d3cab2fc9fe5cc49d243964a9bd4a3877a642056e",
+  "md5": "2c699555b35c12f1712f19537c08a6c7",
+  "sha256": "20b773cb00c44ad4631b8aa024d9592a53ff87014920b500715b0046063b839e",
+  "path": "scripts/chronos/2c699555b35c12f1712f19537c08a6c7.zip",
+  "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/chronos/2c699555b35c12f1712f19537c08a6c7.zip",
+  "platform": "standard Bilibili universal iPhone package",
+  "nativeRuntimeVerified": false
+}

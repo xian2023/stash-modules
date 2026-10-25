@@ -6,7 +6,7 @@ icon: https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/
 author: kokoryh (original scripts); Kelee (original rules); local Stash adaptation
 homepage: https://github.com/xian2023/stash-modules
 category: 去广告
-version: 2026.10.25-preview.5
+version: 2026.10.25-preview.6
 rules:
   - DOMAIN,api.biliapi.com,REJECT
   - DOMAIN,app.biliapi.com,REJECT
@@ -73,24 +73,14 @@ http:
         grpc-status: "0"
         grpc-encoding: identity
   script:
-    - match: ^https://(?:grpc\.biliapi\.net|app\.bilibili\.com)/bilibili\.community\.service\.dm\.v1\.DM/DmSegMobile$
-      name: bili-kokoryh-request-76d2ec9ac27965ca
+    - match: ^https://api\.bilibili\.com/x/stash-airborne/segments(?:\?|$)
+      name: bili-airborne-worker-7d2850e383a5b312
       type: request
-      require-body: true
-      binary-mode: true
-      timeout: 1
-      max-size: 1048576
-      argument: '{"displayUpList":"show","purifyComment":true,"optimizeRequest":true,"sponsorBlock":true,"logLevel":"off"}'
-    - match: ^https://(?:grpc\.biliapi\.net|app\.bilibili\.com)/bilibili\.community\.service\.dm\.v1\.DM/DmSegMobile$
-      name: bili-kokoryh-request-76d2ec9ac27965ca
-      type: response
-      require-body: true
-      binary-mode: true
-      timeout: 2
-      max-size: 4194304
-      argument: '{"displayUpList":"show","purifyComment":true,"optimizeRequest":true,"sponsorBlock":true,"logLevel":"off"}'
+      require-body: false
+      timeout: 4
+      max-size: 1024
     - match: (?i)^https:\/\/(grpc\.biliapi\.net|app\.bilibili\.com)\/bilibili\.(app\.(show\.v1\.Popular\/Index|dynamic\.v2\.Dynamic\/DynAll|view(unite)?\.v1\.View\/(View|ViewProgress|RelatesFeed|AIRelateAsync)|playurl\.v1\.PlayURL\/PlayView|playerunite\.v1\.Player\/PlayViewUnite)|polymer\.app\.search\.v1\.Search\/SearchAll|community\.service\.dm\.v1\.DM\/DmView|pgc\.gateway\.player\.v2\.PlayURL\/PlayView)$
-      name: bili-kokoryh-response-76d2ec9ac27965ca
+      name: bili-kokoryh-response-7d2850e383a5b312
       type: response
       require-body: true
       binary-mode: true
@@ -98,19 +88,22 @@ http:
       max-size: 4194304
       argument: '{"displayUpList":"show","purifyComment":true,"optimizeRequest":true,"sponsorBlock":true,"logLevel":"off"}'
     - match: (?i)^https:\/\/api\.live\.bilibili\.com\/xlive\/(?:app-interface\/v2\/index\/feed|app-room\/v1\/index\/getInfoBy(?:Room|User))\?
-      name: bili-kokoryh-live-76d2ec9ac27965ca
+      name: bili-kokoryh-live-7d2850e383a5b312
       type: response
       require-body: true
       timeout: 3
       max-size: 2097152
       argument: '{"logLevel":"off"}'
 script-providers:
-  bili-kokoryh-request-76d2ec9ac27965ca:
-    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/76d2ec9ac27965ca/request.js
+  bili-kokoryh-request-7d2850e383a5b312:
+    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/request.js
     interval: 86400
-  bili-kokoryh-response-76d2ec9ac27965ca:
-    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/76d2ec9ac27965ca/response.js
+  bili-kokoryh-response-7d2850e383a5b312:
+    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/response.js
     interval: 86400
-  bili-kokoryh-live-76d2ec9ac27965ca:
-    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/76d2ec9ac27965ca/live.js
+  bili-kokoryh-live-7d2850e383a5b312:
+    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/live.js
+    interval: 86400
+  bili-airborne-worker-7d2850e383a5b312:
+    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/sponsor.js
     interval: 86400

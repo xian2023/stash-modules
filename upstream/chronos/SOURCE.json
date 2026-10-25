@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/kokoryh/chronos",
+  "url": "https://raw.githubusercontent.com/kokoryh/chronos/refs/heads/master/e5a968f1a5055bbe5c12e67b100a6dcb.zip",
+  "archive": "e5a968f1a5055bbe5c12e67b100a6dcb.zip",
+  "md5": "e5a968f1a5055bbe5c12e67b100a6dcb",
+  "sha256": "c82d74ac16e2d1ecb82f8f3d3cab2fc9fe5cc49d243964a9bd4a3877a642056e",
+  "license": "GPL-3.0 as distributed by kokoryh/chronos",
+  "retrieved": "2026-10-25",
+  "scope": "Standard Bilibili universal iPhone package; native runtime not verified"
+}

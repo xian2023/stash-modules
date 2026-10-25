@@ -1,14 +1,18 @@
 {
-  "version": "2026.10.25-preview.5",
-  "release": "76d2ec9ac27965ca",
+  "version": "2026.10.25-preview.6",
+  "release": "7d2850e383a5b312",
   "modules": [
     "Bilibili_remove_ads.stoverride",
     "Bilibili_passthrough.stoverride",
     "Bilibili_comments_optional.stoverride"
   ],
+  "assets": {
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/chronos/2c699555b35c12f1712f19537c08a6c7.zip": "20b773cb00c44ad4631b8aa024d9592a53ff87014920b500715b0046063b839e"
+  },
   "scripts": {
-    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/76d2ec9ac27965ca/request.js": "3c01e54f8f456aa87b91539558587802bffeda3eb4f265e641488aeac90e58e2",
-    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/76d2ec9ac27965ca/response.js": "6976e2c114b68afbe0e95b390964e096362326aca54d8808d704a5a716b7b7c3",
-    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/76d2ec9ac27965ca/live.js": "507bf43b89ad3bc4615333a1ec2fc145ede67a2479223e69023eef552034737e"
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/request.js": "d029ad55858cc651d43369b6d003c271a68f4b6ab58efc2bd2c73fbd72a69552",
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/response.js": "45634d9026f6d060ad832e74bbfdfb051b7a6736d014d5cff98124b40c6fbef5",
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/live.js": "507bf43b89ad3bc4615333a1ec2fc145ede67a2479223e69023eef552034737e",
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/sponsor.js": "cae9e53cca89a06d2658c23d6ef96f06bc895551461f60fea22f0a22e6eb4998"
   }
 }

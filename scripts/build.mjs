@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import YAML from 'yaml';
+import { buildChronos } from './build-chronos.mjs';
 
 const read = file => fs.readFileSync(file, 'utf8');
 fs.mkdirSync('output/scripts', {recursive:true});
@@ -11,12 +12,14 @@ const fflate = read('node_modules/fflate/umd/index.js');
 const common = read('src/stash-common.js');
 const repository = JSON.parse(read('repository.json'));
 const rawBase = `https://raw.githubusercontent.com/${repository.owner}/${repository.name}/${repository.branch}`;
+const chronos = buildChronos(rawBase);
 const notice = '// Modified for Stash on 2026-10-24. Upstream kokoryh/Sparkle, GPL-3.0.\n// Includes fflate by Arjun Barrett, MIT. See bundled LICENSE and THIRD_PARTY_NOTICES.txt.\n';
 const bundles = {};
 for (const [name, suffix] of [['request','nt.run();'],['response','mn.run();']]) {
   const source = read(`upstream/scripts/proto_${name}.js`);
   if (!source.endsWith(suffix)) throw new Error(`Unexpected upstream ${name} entry point`);
-  const result = notice + fflate + '\n' + common + '\n' + source.slice(0,-suffix.length) + '\n' + read(`src/stash-${name}.js`) + '\n' + suffix + '\n';
+  const descriptor = name==='response' ? `\nconst STASH_DEFERRED_CHRONOS = ${JSON.stringify({md5:chronos.md5,url:chronos.url})};\n` : '\n';
+  const result = notice + fflate + '\n' + common + '\n' + source.slice(0,-suffix.length) + descriptor + read(`src/stash-${name}.js`) + '\n' + suffix + '\n';
   const filename = `bilibili.${name}.stash.js`;
   fs.writeFileSync('output/scripts/' + filename, result);
   bundles[`bili-kokoryh-${name}`] = result;
@@ -24,14 +27,16 @@ for (const [name, suffix] of [['request','nt.run();'],['response','mn.run();']])
 // Live JSON handlers need no Loon-only API for the selected two routes.
 bundles['bili-kokoryh-live'] = notice + read('upstream/scripts/live_json.js');
 fs.writeFileSync('output/scripts/bilibili.live.stash.js', bundles['bili-kokoryh-live']);
+bundles['bili-airborne-worker'] = read('src/stash-sponsor-worker.js');
+fs.writeFileSync('output/scripts/bilibili.sponsor.stash.js',bundles['bili-airborne-worker']);
 
 const config = {
   name: '哔哩哔哩去广告 + 空降助手 · Loon 评论兼容',
-  desc: '弹幕原请求直接发送，不再脚本转发；收到响应后限时查询空降（250ms保护），命中缓存不查询。保留 Loon 一级/楼中楼评论兼容链。停用其他 B站模块，实际速度需 iPhone 验证。',
+  desc: '普通版 B站延后空降预览：分包弹幕不挂脚本，不等待空降查询；播放器连续播放约8秒后独立查询，仍在广告段才跳过。保留一级/楼中楼评论兼容；非全部资源完成事件，手机效果待验收。',
   icon: 'https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Bilibili.png',
   author: 'kokoryh (original scripts); Kelee (original rules); local Stash adaptation',
   homepage: `https://github.com/${repository.owner}/${repository.name}`,
-  category: '去广告', version: '2026.10.25-preview.5',
+  category: '去广告', version: '2026.10.25-preview.6',
   rules: [
     'DOMAIN,api.biliapi.com,REJECT', 'DOMAIN,app.biliapi.com,REJECT',
     'DOMAIN,api.biliapi.net,REJECT', 'DOMAIN,app.biliapi.net,REJECT',
@@ -79,14 +84,9 @@ for (const line of original.split('\n')) {
 }
 const args = JSON.stringify({displayUpList:'show',purifyComment:true,optimizeRequest:true,sponsorBlock:true,logLevel:'off'});
 config.http.script.push({
-  match: '^https://(?:grpc\\.biliapi\\.net|app\\.bilibili\\.com)/bilibili\\.community\\.service\\.dm\\.v1\\.DM/DmSegMobile$',
-  name: 'bili-kokoryh-request', type: 'request', 'require-body': true, 'binary-mode': true,
-  timeout: 1, 'max-size': 1048576, argument: args
-});
-config.http.script.push({
-  match: '^https://(?:grpc\\.biliapi\\.net|app\\.bilibili\\.com)/bilibili\\.community\\.service\\.dm\\.v1\\.DM/DmSegMobile$',
-  name: 'bili-kokoryh-request', type: 'response', 'require-body': true, 'binary-mode': true,
-  timeout: 2, 'max-size': 4194304, argument: args
+  match: String.raw`^https://api\.bilibili\.com/x/stash-airborne/segments(?:\?|$)`,
+  name:'bili-airborne-worker',type:'request','require-body':false,
+  timeout:4,'max-size':1024
 });
 const responseLine = original.split('\n').find(l=>l.startsWith('response if ') && l.includes('Bilibili_proto_response_kokoryh.js'));
 const originalResponsePattern = responseLine.match(/~= \/(.*?)\/i then /)[1];
@@ -113,7 +113,7 @@ const header = '# Adapted 2026-10-24. Original: kokoryh/Sparkle (GPL-3.0), Kelee
 fs.writeFileSync('output/Bilibili_remove_ads.stoverride',header + YAML.stringify(config,{lineWidth:0}));
 const local = structuredClone(config);
 local.name += ' · 本地脚本';
-for (const [i,name] of Object.keys(bundles).entries()) local['script-providers'][name] = {path:'./scripts/' + ['bilibili.request.stash.js','bilibili.response.stash.js','bilibili.live.stash.js'][i]};
+for (const [i,name] of Object.keys(bundles).entries()) local['script-providers'][name] = {path:'./scripts/' + ['bilibili.request.stash.js','bilibili.response.stash.js','bilibili.live.stash.js','bilibili.sponsor.stash.js'][i]};
 fs.writeFileSync('output/Bilibili_remove_ads.local.stoverride', header + YAML.stringify(local,{lineWidth:0}));
 
 // Publish the small override and versioned remote scripts as one Git commit.
@@ -123,7 +123,7 @@ const runtimeDir = `scripts/bilibili/${release}`;
 fs.mkdirSync(runtimeDir, {recursive:true});
 fs.mkdirSync('modules', {recursive:true});
 const remote = structuredClone(config);
-const providerFiles = ['request.js','response.js','live.js'];
+const providerFiles = ['request.js','response.js','live.js','sponsor.js'];
 remote['script-providers'] = {};
 for (const [i,[name,payload]] of Object.entries(bundles).entries()) {
   fs.writeFileSync(`${runtimeDir}/${providerFiles[i]}`, payload);
@@ -153,7 +153,7 @@ const comments = {
   'script-providers':{[commentProviderName]:remote['script-providers'][commentProviderName]}
 };
 fs.writeFileSync('modules/Bilibili_comments_optional.stoverride',header + YAML.stringify(comments,{lineWidth:0}));
-fs.writeFileSync('modules/manifest.json',JSON.stringify({version:config.version,release,modules:['Bilibili_remove_ads.stoverride','Bilibili_passthrough.stoverride','Bilibili_comments_optional.stoverride'],scripts:Object.fromEntries(Object.values(remote['script-providers']).map(p=>[p.url,crypto.createHash('sha256').update(read(p.url.slice(rawBase.length+1))).digest('hex')]))},null,2)+'\n');
+fs.writeFileSync('modules/manifest.json',JSON.stringify({version:config.version,release,modules:['Bilibili_remove_ads.stoverride','Bilibili_passthrough.stoverride','Bilibili_comments_optional.stoverride'],assets:{[chronos.url]:chronos.sha256},scripts:Object.fromEntries(Object.values(remote['script-providers']).map(p=>[p.url,crypto.createHash('sha256').update(read(p.url.slice(rawBase.length+1))).digest('hex')]))},null,2)+'\n');
 fs.writeFileSync('evidence/rule-mapping.json', JSON.stringify(mapping,null,2));
 const hashes = {};
 for (const folder of ['upstream','upstream/scripts','upstream/jq','output/scripts']) {

@@ -17,4 +17,4 @@ jobs:
       - run: jq --version
       - run: npm test
       - name: Check published files match the source
-        run: git diff --exit-code -- modules scripts/bilibili scripts/x
+        run: git diff --exit-code -- modules scripts/bilibili scripts/chronos scripts/x

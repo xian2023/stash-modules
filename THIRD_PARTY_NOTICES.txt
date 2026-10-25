@@ -6,9 +6,16 @@ Original rule distribution: Kelee
 https://kelee.one/Tool/Loon/Lpx/Bilibili_remove_ads.lpx
 The upstream snapshots used by the builder are preserved under upstream/.
 
-Local Stash compatibility changes: 2026-10-24. Not an upstream release.
+Local Stash compatibility changes: 2026-10-25. Not an upstream release.
 
 gzip implementation: fflate, Arjun Barrett
 License: MIT (see licenses/fflate.LICENSE).
 
-Playback resources are referenced from kokoryh/chronos and are not bundled.
+Playback resources: kokoryh/chronos, distributed under GPL-3.0 in that repository.
+https://github.com/kokoryh/chronos
+The pinned standard iPhone package is bundled under upstream/chronos/.
+Its original info.json and resource bytes retain The Danmaku Flame Master
+Authors / bilibili attribution. The builder modifies one entry-point file to
+install src/chronos-deferred.js; the modified archive is in scripts/chronos/.
+See upstream/chronos/SOURCE.json and modules/chronos.manifest.json for hashes.
+These local modifications are not an upstream release or author endorsement.

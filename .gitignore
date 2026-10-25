@@ -4,6 +4,8 @@ evidence/
 output/
 *.log
 *.zip
+!upstream/chronos/*.zip
+!scripts/chronos/*.zip
 .env
 .env.*
 /upstream/Bilibili_remove_ads.lpx

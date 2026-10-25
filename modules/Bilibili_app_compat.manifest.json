@@ -1,0 +1,26 @@
+{
+  "version": "2026.10.25-app-preview.1",
+  "module": "modules/Bilibili_app_compat.stoverride",
+  "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_app_compat.stoverride",
+  "sha256": "67edc948f37ddd9353bbab3c133794daa4b827ac66c953b39900ca6789fc559c",
+  "exclusive": true,
+  "sourceVersion": "2026.10.25-preview.6",
+  "sourceSha256": "ce5da6dd8a83bbe666cb39da84ae6465745c8f643bc2623ae518e117ffacadbc",
+  "baseline": "User reports 05 (grpc-only MitM) slow and 06 (app-only MitM) normal; filtering preview not yet phone-verified",
+  "features": [
+    "app splash list mock",
+    "app splash show/event native filter",
+    "app home feed native filter",
+    "app story feed native filter"
+  ],
+  "excluded": [
+    "grpc MitM",
+    "other MitM hosts",
+    "JavaScript",
+    "request relay",
+    "comments",
+    "danmaku",
+    "airborne",
+    "domain rejects"
+  ]
+}

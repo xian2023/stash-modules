@@ -18,15 +18,25 @@ https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/X_Web_remo
 
 ## Bilibili 去广告与空降
 
-**当前真机反馈：关闭全部 B站覆写正常，01–04（包括仅解密）均卡。优先用 [单域名解密对照 05/06](docs/BILIBILI_DIAGNOSIS.md) 查连接与有效配置；这组结果不支持直接归因广告回包或空降等待。诊断覆写互斥，主模块尚未通过该手机的性能验收，日常可先停用。**
+**当前真机反馈：全关正常，01–04 均卡，05（仅解密 grpc）卡，06（仅解密 app）正常。已优先避开 grpc 解密，不能直接归因广告回包或空降等待，具体连接原因仍未确认。**
+
+基于正常的 06 基线，先恢复少量功能，使用独立的 **app 域名精简兼容预览**：
+
+```text
+https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_app_compat.stoverride
+```
+
+版本 `2026.10.25-app-preview.1`，只添加 `app.bilibili.com` 解密，保留开屏列表响应及开屏、首页、竖屏推荐的原生过滤。没有 JS、请求转发、评论/弹幕处理或空降；走 grpc 及其他域名的广告会保留。仅对匹配接口有效，不保证覆盖所有首页广告。此版新增的过滤尚待真机验证流畅度。[定位过程与使用边界](docs/BILIBILI_DIAGNOSIS.md)。
+
+**关闭主模块、01–09、评论直通/可选版及其他 B站覆写，只开这一份；完全退出 B站，重连 Stash 后再打开。** 它不会移除基础配置或其他覆写的解密域名，仍需确认没有其他来源开启 grpc 解密。
 
 基于 Kelee 2026-10-02 规则和 kokoryh/Sparkle 脚本适配。
 
 **当前版本：2026.10.25-preview.6。普通版 iPhone B站的播放器延后空降预览：分包弹幕完全不挂脚本，播放稳定推进约 8 秒后独立查询，中插广告由播放器检查进度后跳过。** 这不是“全部资源加载完成”事件，也不代表已通过真机验收；一级评论和楼中楼兼容链保留。
 
-## 导入
+## 原完整预览版导入
 
-在 Stash 的覆写管理中，通过 URL 添加下面的主模块：
+原主模块保留作开发对照，包含已在该设备复现卡顿的 grpc 解密，当前不作为流畅方案。若需要原完整功能，其地址如下：
 
 ```text
 https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_remove_ads.stoverride

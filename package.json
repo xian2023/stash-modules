@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "build": "node scripts/build.mjs && node scripts/build-x.mjs",
-    "test": "npm run build && node tests/verify.mjs && node tests/bili-diagnostics.mjs && node tests/bili-app-compat.mjs && node tests/bili-app-experiments.mjs && node tests/bili-full-compat.mjs && node tests/bili-banner-probe.mjs && node tests/bili-banner-ui.mjs && node tests/bili-banner-dashboard.mjs && node tests/sponsor-worker.mjs && node tests/chronos-deferred.mjs && node tests/x-verify.mjs"
+    "test": "npm run build && node tests/verify.mjs && node tests/bili-diagnostics.mjs && node tests/bili-app-compat.mjs && node tests/bili-app-experiments.mjs && node tests/bili-full-compat.mjs && node tests/bili-refactored.mjs && node tests/bili-banner-probe.mjs && node tests/bili-banner-ui.mjs && node tests/bili-banner-dashboard.mjs && node tests/sponsor-worker.mjs && node tests/chronos-deferred.mjs && node tests/x-verify.mjs"
   },
   "keywords": [],
   "author": "",

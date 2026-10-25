@@ -1,0 +1,54 @@
+{
+  "version": "2026.10.26-refactor.1",
+  "module": "modules/Bilibili_refactored.stoverride",
+  "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_refactored.stoverride",
+  "sha256": "bde021c2bbc673e54c639cad9a31ca21b342c5d6d972b976665f8637acde08bb",
+  "exclusive": true,
+  "deviceStatus": "awaiting-test",
+  "baseline": {
+    "module": "modules/Bilibili_compat_full_test.stoverride",
+    "sha256": "bdfc9e53c726817ec0d29450b678524ef4e0a0174466a570e4aecb3e0c150939"
+  },
+  "scripts": {
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/response.js": "45634d9026f6d060ad832e74bbfdfb051b7a6736d014d5cff98124b40c6fbef5",
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/live.js": "507bf43b89ad3bc4615333a1ec2fc145ede67a2479223e69023eef552034737e",
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/sponsor.js": "cae9e53cca89a06d2658c23d6ef96f06bc895551461f60fea22f0a22e6eb4998"
+  },
+  "assets": {
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/chronos/2c699555b35c12f1712f19537c08a6c7.zip": "20b773cb00c44ad4631b8aa024d9592a53ff87014920b500715b0046063b839e"
+  },
+  "responseHosts": [
+    "grpc.biliapi.net",
+    "app.bilibili.com"
+  ],
+  "responseRoutes": [
+    "app.show.v1.Popular/Index",
+    "app.dynamic.v2.Dynamic/DynAll",
+    "polymer.app.search.v1.Search/SearchAll",
+    "app.view.v1.View/View",
+    "app.viewunite.v1.View/View",
+    "app.view.v1.View/RelatesFeed",
+    "app.viewunite.v1.View/RelatesFeed",
+    "app.viewunite.v1.View/AIRelateAsync",
+    "app.view.v1.View/ViewProgress",
+    "app.viewunite.v1.View/ViewProgress",
+    "app.playurl.v1.PlayURL/PlayView",
+    "app.playerunite.v1.Player/PlayViewUnite",
+    "pgc.gateway.player.v2.PlayURL/PlayView",
+    "community.service.dm.v1.DM/DmView"
+  ],
+  "exclusions": [
+    "all original request relay",
+    "MainList/DetailList/DialogList scripts",
+    "DmSegMobile hooks",
+    "grpc-only mocks",
+    "alternate API rejects",
+    "diagnostic probes"
+  ],
+  "limits": [
+    "requires user-confirmed TUN compatibility mode; does not change that setting",
+    "comment ads are not filtered",
+    "MitM still affects connections on the shared grpc hostname",
+    "combined banner removal and comment latency require phone verification"
+  ]
+}

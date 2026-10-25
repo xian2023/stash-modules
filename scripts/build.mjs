@@ -6,6 +6,7 @@ import { buildChronos } from './build-chronos.mjs';
 import { buildDiagnostics } from './build-diagnostics.mjs';
 import { buildAppCompatibility } from './build-app-compat.mjs';
 import { buildAppExperiments } from './build-app-experiments.mjs';
+import { buildRefactored } from './build-refactored.mjs';
 import { buildFullCompatibility } from './build-full-compat.mjs';
 import { buildBannerProbe } from './build-banner-probe.mjs';
 import { buildBannerDashboard } from './build-banner-dashboard.mjs';
@@ -141,6 +142,7 @@ buildDiagnostics(remote,rawBase);
 buildAppCompatibility(remote,rawBase);
 buildAppExperiments(remote,rawBase);
 buildFullCompatibility(remote,rawBase);
+buildRefactored(rawBase);
 buildBannerProbe(rawBase);
 buildBannerDashboard(rawBase);
 // Keep the prior behavior available as a mutually exclusive diagnostic option.

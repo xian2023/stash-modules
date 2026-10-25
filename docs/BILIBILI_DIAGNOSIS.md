@@ -2,7 +2,19 @@
 
 目标是找出哪一组处理与当前手机的卡顿有关，而不是继续假定空降服务是唯一原因。主模块暂保持 `2026.10.25-preview.6` 原样；本页对照模块为 `2026.10.25-diag.2`，由同一版本自动构建。源版本及文件哈希在 `modules/Bilibili_diagnostics.manifest.json`。
 
-## 最新结果：完整兼容版其他正常，详情广告仍在
+## 当前整合：TUN 兼容模式 + grpc 视频过滤 + 评论直通
+
+用户最新确认“使用 turn 兼容模式能够改善”；沿用用户指明的有效兼容设置，不把它擅自等同于此前建议的“仅使用 Tunnel 代理”开关，也不由覆写修改这项 App 设置。用户随后测试旧完整主模块 `preview.6`：视频横幅没有了，但评论区有加载延时。这确认该轮旧完整模块的表现，尚不能将延时唯一归因于其请求重放；此前无脚本 grpc 解密对照仍是相关历史证据。
+
+原先 [Bilibili_compat_full_test.stoverride](https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_compat_full_test.stoverride) 已移除原请求重放，但排除了 grpc 解密，因此不满足本次同时保留视频过滤的需要。新增独立 [Bilibili_refactored.stoverride](https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_refactored.stoverride)，版本 `2026.10.26-refactor.1`：从被冻结的完整兼容版生成，恢复 grpc 解密和两个域名共 14 条已注册的内容/视频/播放器响应路径，并进一步移除 MainList 响应脚本，关闭 purifyComment/optimizeRequest 参数。
+
+一级评论 MainList、楼中楼 DetailList/DialogList 和普通弹幕分段 DmSegMobile 在两域名下都没有请求/响应脚本或模拟正文；保留 DM 配置 DmView。只有独立合成空降端点使用 request worker。评论区广告暂不处理；评论仍会经过同域名 TLS 解密，不能把脚本直通宣称为整个网络链零延时。原生 JSON、直播过滤、P2P 规则和延后空降资源保持完整兼容版原样，继续不添加备用 API REJECT 和 grpc-only 静态 mock，也不加入任何诊断探针。
+
+停用旧主模块、各兼容版、可选评论版和全部诊断版，只开重构版；保持刚验证有效的兼容模式，划掉 B站、重连 Stash 后打开视频。只需确认横幅是否消失、一级评论和楼中楼是否仍延时。若有异常可直接切回被冻结的完整兼容版；它仍不解密 grpc，因此原先横幅可能重新出现。不要同时叠加可选评论过滤，否则不再是此评论直通对照。
+
+离线验证覆盖两个主机的广告/普通关联内容、gzip、未知字段、错误放行、两种播放器资源改写、无评论/楼中楼/弹幕分段 hook、无响应侧额外请求和全配置差异边界；完整回归沿用空降生命周期/中插测试。当前新组合仍为 `awaiting-test`，手机流畅度与横幅效果尚待用户反馈。原主模块、完整兼容版、精简版及全部诊断产物字节不变。
+
+## 此前结果：完整兼容版其他正常，详情广告仍在
 
 用户已反馈完整兼容测试“其他都正常”，并确认剩余横幅带“广告”标记；截图显示播放器正下方的游戏下载横幅和推荐列表中的游戏广告卡。记录为本轮整体加载正常、两处广告仍可见，不据此单独宣称空降或每个接口已验收。
 

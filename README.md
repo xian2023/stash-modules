@@ -18,9 +18,21 @@ https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/X_Web_remo
 
 ## Bilibili 去广告与空降
 
-**当前真机反馈：全关正常，01–04 均卡，05（仅解密 grpc）卡，06（仅解密 app）正常。已优先避开 grpc 解密，不能直接归因广告回包或空降等待，具体连接原因仍未确认。**
+**最新整合版：用户确认 TUN 兼容模式能够改善，旧完整主模块能去掉视频横幅，但评论加载仍延时。新增评论直通重构版，保留此前加载改进并恢复 grpc 视频过滤：**
 
-**用户已反馈 app 域名精简版使用正常，当前建议继续使用这一份，作为后续功能加回的基线。** 该反馈确认本轮加载表现，不代表所有广告形态已验证。
+```text
+https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_refactored.stoverride
+```
+
+版本 `2026.10.26-refactor.1`。只启用这一份，停用旧主模块、完整兼容版和所有 B站诊断版；保持用户已经验证有效的 TUN 兼容模式，划掉 B站并重连 Stash 后重开。本模块不替用户修改 TUN 设置。
+
+恢复 grpc/app 的 14 条视频/动态/搜索/播放器响应过滤及延后空降；原请求不重放，一级评论、楼中楼和普通弹幕分段均不挂脚本，**因此评论区广告暂不处理**。沿用完整兼容版原生 JSON/直播处理，继续移除备用 API 拒绝和 grpc 静态假回包。已验证两个域名的详情/关联推广过滤、gzip/未知字段/失败放行及播放器资源链；新组合的手机横幅去除与评论延时仍待验收。TUN 改善不等于共享 grpc 域名的所有解密连接已经正常。[整合范围及回退说明](docs/BILIBILI_DIAGNOSIS.md)。
+
+### 历史对照：避开 grpc 的精简版
+
+**此前未采用现已改善的 TUN 兼容条件时，真机反馈：全关正常，01–04 均卡，05（仅解密 grpc）卡，06（仅解密 app）正常。已优先避开 grpc 解密，不能直接归因广告回包或空降等待，具体连接原因仍未确认。**
+
+**用户已反馈 app 域名精简版使用正常，保留这一份作为回退基线。** 该反馈确认本轮加载表现，不代表所有广告形态已验证。
 
 ```text
 https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_app_compat.stoverride

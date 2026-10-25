@@ -1,0 +1,40 @@
+{
+  "version": "2026.10.25-diag.1",
+  "sourceVersion": "2026.10.25-preview.6",
+  "sourceSha256": "ce5da6dd8a83bbe666cb39da84ae6465745c8f643bc2623ae518e117ffacadbc",
+  "exclusive": true,
+  "stages": [
+    {
+      "id": "01",
+      "title": "关闭空降与播放器改写",
+      "removed": "移除独立空降端点与两个 ViewProgress 路径，保留评论/详情转发及其他处理",
+      "module": "modules/Bilibili_diag_01_no_airborne.stoverride",
+      "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_01_no_airborne.stoverride",
+      "sha256": "5413c9c533afebb144cb8979795f50ec9b2f6f317d78eabbcb8fa414075c2cce"
+    },
+    {
+      "id": "02",
+      "title": "再关闭请求转发",
+      "removed": "在 01 基础上移除全部 request 脚本，保留响应过滤、原生规则及解密",
+      "module": "modules/Bilibili_diag_02_no_relay.stoverride",
+      "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_02_no_relay.stoverride",
+      "sha256": "035e43bb0ede0a59255acd8956543c65e2efca82d08580f51d83b307dc709a3f"
+    },
+    {
+      "id": "03",
+      "title": "再关闭全部 JS",
+      "removed": "在 02 基础上移除全部 JS 和 provider，仅保留原生改写/静态响应/规则及解密",
+      "module": "modules/Bilibili_diag_03_no_js.stoverride",
+      "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_03_no_js.stoverride",
+      "sha256": "a895080fc62a014ff12b3884629a5edca1b76b39210c3ff9d2345e6e2d7542a3"
+    },
+    {
+      "id": "04",
+      "title": "仅保留 HTTPS 解密",
+      "removed": "仅添加与主模块相同的解密域名，不添加 JS、原生改写、静态响应或拦截规则",
+      "module": "modules/Bilibili_diag_04_mitm_only.stoverride",
+      "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_04_mitm_only.stoverride",
+      "sha256": "7f8cdb93b0d3f78d6b20dccfc5f2818f601cb05f43aca94a11235369c5d2a4ed"
+    }
+  ]
+}

@@ -18,6 +18,8 @@ https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/X_Web_remo
 
 ## Bilibili 去广告与空降
 
+**仍有卡顿时，先用 [四级互斥对照模块](docs/BILIBILI_DIAGNOSIS.md) 定位。一次只开一个，先关空降，再关请求转发、全部 JS、最后仅保留解密；主模块保持原样，不继续盲改超时。**
+
 基于 Kelee 2026-10-02 规则和 kokoryh/Sparkle 脚本适配。
 
 **当前版本：2026.10.25-preview.6。普通版 iPhone B站的播放器延后空降预览：分包弹幕完全不挂脚本，播放稳定推进约 8 秒后独立查询，中插广告由播放器检查进度后跳过。** 这不是“全部资源加载完成”事件，也不代表已通过真机验收；一级评论和楼中楼兼容链保留。

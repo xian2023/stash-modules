@@ -3,6 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import YAML from 'yaml';
 import { buildChronos } from './build-chronos.mjs';
+import { buildDiagnostics } from './build-diagnostics.mjs';
 
 const read = file => fs.readFileSync(file, 'utf8');
 fs.mkdirSync('output/scripts', {recursive:true});
@@ -131,6 +132,7 @@ for (const [i,[name,payload]] of Object.entries(bundles).entries()) {
 }
 for (const hook of remote.http.script) hook.name += `-${release}`;
 fs.writeFileSync('modules/Bilibili_remove_ads.stoverride',header + YAML.stringify(remote,{lineWidth:0}));
+buildDiagnostics(remote,rawBase);
 // Keep the prior behavior available as a mutually exclusive diagnostic option.
 const passthrough = structuredClone(remote);
 passthrough.name = '哔哩哔哩去广告 + 空降助手 · 评论直通对照';

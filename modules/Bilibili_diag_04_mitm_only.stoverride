@@ -1,0 +1,13 @@
+# Mutually exclusive cumulative Bilibili diagnostic. Not a patch over the main module.
+name: B站排查 04 · 仅保留 HTTPS 解密
+desc: 与主模块、评论直通、可选评论及其他 B站覆写互斥。完全退出 B站、重连 Stash 后，用相同视频复测。仅添加与主模块相同的解密域名，不添加 JS、原生改写、静态响应或拦截规则；见仓库分阶段排查说明。
+version: 2026.10.25-diag.1
+category: 诊断
+homepage: https://github.com/xian2023/stash-modules
+http:
+  mitm:
+    - grpc.biliapi.net
+    - app.bilibili.com
+    - api.bilibili.com
+    - api.live.bilibili.com
+    - line3-h5-mobile-api.biligame.com

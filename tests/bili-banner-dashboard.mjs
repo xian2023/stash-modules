@@ -12,12 +12,13 @@ assert.equal(sha(read(m.baseline.module)),'bdfc9e53c726817ec0d29450b678524ef4e0a
 const workerHook=config.http.script.find(h=>h.name.startsWith('bili-banner-dashboard-'));
 const probeHook=config.http.script.find(h=>h.name.startsWith('bili-banner-panel-probe-'));
 const requestHook=config.http.script.find(h=>h.name.startsWith('bili-banner-request-'));
+const observerHook=config.http.script.find(h=>h.name.startsWith('bili-banner-observe-'));
 const oldHook=full.http.script.find(h=>h.name.startsWith('bili-kokoryh-response-'));
 const normalized=structuredClone(config);
 for(const key of ['name','desc','version'])normalized[key]=full[key];
-normalized.http.script=normalized.http.script.filter(h=>h.name!==workerHook.name&&h.name!==requestHook.name);
+normalized.http.script=normalized.http.script.filter(h=>h.name!==workerHook.name&&h.name!==requestHook.name&&h.name!==observerHook.name);
 normalized.http.script.find(h=>h.name===probeHook.name).name=oldHook.name;
-delete normalized['script-providers'][requestHook.name];delete normalized['script-providers'][probeHook.name];delete normalized['script-providers'][workerHook.name];
+delete normalized['script-providers'][observerHook.name];delete normalized['script-providers'][requestHook.name];delete normalized['script-providers'][probeHook.name];delete normalized['script-providers'][workerHook.name];
 normalized['script-providers'][oldHook.name]=full['script-providers'][oldHook.name];
 assert.deepEqual(normalized,full,'only diagnostic endpoints, request presence and response telemetry are added');
 assert.equal(workerHook['require-body'],false);
@@ -30,6 +31,11 @@ const requestSource=read(m.requestScript.url.slice(rawBase.length));assert.equal
 assert.equal(requestHook['require-body'],false);
 for(const url of ['https://app.bilibili.com/bilibili.app.viewunite.v1.View/View','https://api.bilibili.com/x/test?secret=1','https://app.bilibili.com/x/stash-banner/check'])assert(new RegExp(requestHook.match).test(url));
 for(const url of ['https://grpc.biliapi.net/anything','https://app.bilibili.com.evil.example/test','https://api.bilibili.com/x/stash-banner/status','https://api.bilibili.com/x/stash-airborne/segments?aid=1','https://app.bilibili.com/x/stash-banner/check?extra=1'])assert(!new RegExp(requestHook.match).test(url));
+const observerSource=read(m.observerScript.url.slice(rawBase.length));assert.equal(sha(observerSource),m.observerScript.sha256);
+assert.equal(observerHook['require-body'],false);assert.equal(observerHook['max-size'],4194304);assert.equal(requestHook['max-size'],4194304);
+const observerRE=new RegExp(observerHook.match.replace(/^\(\?i\)/,''),'i');
+for(const url of ['https://app.bilibili.com/x/v2/view/material?aid=1','https://api.bilibili.com/x/v2/view/ad?aid=1','https://api.bilibili.com/other/path'])assert(observerRE.test(url));
+for(const url of ['https://app.bilibili.com/x/v2/feed/index?x=1','https://app.bilibili.com/x/v2/feed/index/story?x=1','https://app.bilibili.com/x/resource/show/tab/v2?x=1','https://app.bilibili.com/x/v2/account/mine?x=1','https://api.bilibili.com/pgc/view/v2/app/season?x=1','https://api.bilibili.com/x/pd-proxy/tracker?x=1','https://app.bilibili.com/x/v2/splash/list?x=1','https://app.bilibili.com/x/v2/search/square?x=1','https://api.bilibili.com/x/stash-banner/status','https://api.bilibili.com/x/stash-airborne/segments?x=1','https://grpc.biliapi.net/anything','https://app.bilibili.com.evil.example/x/test','https://app.bilibili.com/bilibili.app.view.v1.View/View'])assert(!observerRE.test(url),url);
 const chronos=JSON.parse(read('modules/chronos.manifest.json'));
 assert(responseSource.includes('const STASH_DEFERRED_CHRONOS = '+JSON.stringify({md5:chronos.md5,url:chronos.url})+';'));
 assert(!responseSource.includes('installStashBannerDiagnostic'));
@@ -63,15 +69,15 @@ class Element {
 }
 const script=page.response.body.match(/<script>([\s\S]*?)<\/script>/)[1];
 async function ui(initial,{readFailure=false,resetFailure=false,checkFailure=false}={}) {
-  const elements=Object.fromEntries(['notice','results','raw','start','refresh','transport'].map(id=>[id,new Element()])),calls=[];
-  let data=initial;
-  const context={document:{getElementById:id=>elements[id],createElement:()=>new Element()},fetch:async(url,options)=>{
+  const elements=Object.fromEntries(['notice','results','raw','start','refresh','transport','paths','copy'].map(id=>[id,new Element()])),calls=[];
+  let data=initial,copied=null;
+  const context={navigator:{clipboard:{writeText:async text=>{copied=text;}}},document:{getElementById:id=>elements[id],createElement:()=>new Element()},fetch:async(url,options)=>{
     calls.push({url,options});assert(['/x/stash-banner/status','/x/stash-banner/reset','https://app.bilibili.com/x/stash-banner/check'].includes(url));assert.equal(options.credentials,'omit');
     if(url.endsWith('/check'))return {ok:!checkFailure,json:async()=>({probe:'app-request',saved:!checkFailure})};
     if(url.endsWith('/reset')){if(resetFailure)return {ok:false,json:async()=>({cleared:false})};data={version:1,windowSeconds:60,events:[]};return {ok:true,json:async()=>({cleared:true})};}
     if(readFailure)throw Error('offline');return {ok:true,json:async()=>data};
   }};
-  vm.runInNewContext(script,context);for(let i=0;i<12;i++)await Promise.resolve();return {elements,calls};
+  vm.runInNewContext(script,context);for(let i=0;i<12;i++)await Promise.resolve();return {elements,calls,getCopied:()=>copied};
 }
 const rendered=await ui(report);assert.equal(rendered.elements.results.children[0].children[0].textContent,'统一视频详情');assert(rendered.elements.results.children[0].children[1].textContent.includes('1 → 0'));
 await rendered.elements.start.handlers.click();assert(rendered.elements.notice.textContent.includes('本轮已开始'));assert.equal(rendered.calls.at(-3).options.method,'POST');assert.equal(rendered.calls.at(-2).url,'https://app.bilibili.com/x/stash-banner/check');
@@ -80,8 +86,8 @@ const unknown=await ui({version:1,windowSeconds:60,events:[{route:'view',event:'
 const failed=await ui(report,{readFailure:true});assert(failed.elements.notice.textContent.includes('读取失败'));assert(failed.elements.results.children[0].textContent.includes('不能判断为未命中'));
 const badReset=await ui(report,{resetFailure:true});await badReset.elements.start.handlers.click();assert(badReset.elements.notice.textContent.includes('开始失败'));
 const badCheck=await ui(report,{checkFailure:true});await badCheck.elements.start.handlers.click();assert(badCheck.elements.notice.textContent.includes('自检未通过'));
-const transportReport={version:1,windowSeconds:60,events:[],transport:{storageState:'ready',armed:true,windowSeconds:600,remainingSeconds:590,selfCheckAgeSeconds:10,requests:[{route:'app-json',ageSeconds:5}],responses:[{route:'viewunite',ageSeconds:2}]}};
-const transportUI=await ui(transportReport);assert(transportUI.elements.transport.children.some(line=>line.textContent.includes('统一视频详情')));assert(transportUI.elements.transport.children.some(line=>line.textContent.includes('Safari 自检')));
+const transportReport={version:1,windowSeconds:60,events:[],transport:{storageState:'ready',armed:true,windowSeconds:600,remainingSeconds:590,selfCheckAgeSeconds:10,requests:[{route:'app-json',ageSeconds:5}],responses:[{route:'viewunite',ageSeconds:2}],paths:[{host:'app',path:'/x/v2/view/material',requestAgeSeconds:5,responseHeaderAgeSeconds:2,status:200}]}};
+const transportUI=await ui(transportReport);assert(transportUI.elements.transport.children.some(line=>line.textContent.includes('统一视频详情')));assert(transportUI.elements.transport.children.some(line=>line.textContent.includes('Safari 自检')));assert(transportUI.elements.paths.children[0].textContent.includes('/x/v2/view/material'));await transportUI.elements.copy.handlers.click();assert.equal(JSON.parse(transportUI.getCopied()).transport.paths[0].status,200);
 assert(!/<(?:script|link|img)\b[^>]+(?:src|href)\s*=/i.test(page.response.body),'no external page assets');
 console.log('PASS banner dashboard: frozen filtering/hosts, normal Chronos, local endpoints, scoped reset, HTML/CSP/redaction, UI empty/error/unknown states and no external requests');
 
@@ -90,10 +96,11 @@ console.log('PASS banner dashboard: frozen filtering/hosts, normal Chronos, loca
 const transportKey='bili.stash.banner.transport.v1';
 let clock=Date.now();
 class ClockDate extends Date{static now(){return clock;}}
-function request(url,{method='POST',failRead=false,failWrite=false}={}){
+function request(url,{method='POST',failRead=false,failWrite=false,runtime=requestSource,responseStatus=200}={}){
   let output,calls=0,writes=0;
   const req={url,method};for(const name of ['headers','body'])Object.defineProperty(req,name,{get(){throw Error('request content must not be read');}});
-  vm.runInNewContext(requestSource,{$request:req,Date:ClockDate,$persistentStore:{read:k=>{if(failRead)throw Error('no storage');return store.get(k)??null;},write:(v,k)=>{writes++;assert.equal(k,transportKey);if(failWrite)return false;store.set(k,v);return true;}},$done:value=>{calls++;output=structuredClone(value);}}, {timeout:1000});
+  const resp={status:responseStatus};for(const name of ['headers','body'])Object.defineProperty(resp,name,{get(){throw Error('response content must not be read');}});
+  vm.runInNewContext(runtime,{$request:req,$response:resp,Date:ClockDate,$persistentStore:{read:k=>{if(failRead)throw Error('no storage');return store.get(k)??null;},write:(v,k)=>{writes++;assert.equal(k,transportKey);if(failWrite)return false;store.set(k,v);return true;}},$done:value=>{calls++;output=structuredClone(value);}}, {timeout:1000});
   assert.equal(calls,1);assert(!JSON.stringify([...store.values()]).includes(secret));return {output,writes};
 }
 function arm(){store.set(transportKey,JSON.stringify({version:1,startedAt:clock,selfCheckAt:null,requests:[],responses:[]}));}
@@ -117,6 +124,21 @@ assert.equal(vm.runInContext("stashBannerTransport('read').armed",readContext),f
 store.set(transportKey,'{broken');assert.equal(JSON.parse(execute('status').response.body).transport.storageState,'unavailable');
 assert.deepEqual(request(url).output,{});arm();
 
+// Safe path shapes preserve useful static interface words and erase all other
+// segments, query values, numeric IDs and arbitrary tokens before persistence.
+const pathURL='https://app.bilibili.com/x/v2/view/material/123456/'+secret+'?token='+secret;
+assert.deepEqual(request(pathURL).output,{});
+assert.deepEqual(request(pathURL,{runtime:observerSource,responseStatus:202}).output,{});
+let paths=JSON.parse(store.get(transportKey)).paths;assert.equal(paths[0].path,'/x/v2/view/material/_/_');assert.equal(paths[0].status,202);assert.equal(paths[0].requestAt,clock);assert.equal(paths[0].responseAt,clock);
+assert.equal(request(pathURL,{runtime:observerSource}).writes,0,'header observation is bounded independently');
+const pathStatus=JSON.parse(execute('status',{date:ClockDate}).response.body);assert.equal(pathStatus.transport.paths[0].status,202);assert.equal(pathStatus.transport.responses.length,0,'a received REST header is not a protobuf filter entry');
+assert.deepEqual(request(pathURL,{runtime:observerSource,failRead:true}).output,{});
+assert.deepEqual(request(pathURL,{runtime:observerSource,failWrite:true}).output,{});
+const words=['view','ad','material','config','player','detail','archive','reply'];
+for(const a of words)for(const b of words)request('https://api.bilibili.com/x/'+a+'/'+b);
+let bounded=JSON.parse(store.get(transportKey));assert.equal(bounded.paths.length,48);assert.equal(bounded.pathLimitReached,true);assert(store.get(transportKey).length<32768);
+bounded.paths[0].path='/x/'+secret;store.set(transportKey,JSON.stringify(bounded));assert.equal(JSON.parse(execute('status',{date:ClockDate}).response.body).transport.storageState,'unavailable');arm();
+
 // The real full response worker keeps identical wire output and records its
 // entry even outside the five detail-summary routes. A broken store fails open.
 const globals={Uint8Array,ArrayBuffer,DataView,TextEncoder,TextDecoder,URL,setTimeout,clearTimeout};
@@ -134,4 +156,4 @@ for(const path of ['app.viewunite.v1.View/View','app.show.v1.Popular/Index']){
   assert.deepEqual(observed.output,baseline.output);assert.equal(JSON.parse(observed.local.get(transportKey)).responses.length,1);
   const broken=await response(responseSource,path,{brokenStore:true});assert.deepEqual(broken.output,baseline.output);
 }
-console.log('PASS transport diagnostics: scoped request/response entry markers, arm/expiry/throttle, independent app check, metadata privacy and unchanged wire output on storage failure');
+console.log('PASS transport diagnostics: scoped request/response entry markers, native exclusion, arm/expiry/throttle, independent app check, safe path shapes/header-only observer/copy, metadata privacy and unchanged wire output on storage failure');

@@ -1,8 +1,8 @@
 {
-  "version": "2026.10.25-banner-panel.2",
+  "version": "2026.10.25-banner-panel.3",
   "module": "modules/Bilibili_banner_dashboard.stoverride",
   "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_banner_dashboard.stoverride",
-  "sha256": "52489eb1fc79043b1814de27973f137f3cf3f13601247d8d3450b700862a45d5",
+  "sha256": "0f09cf4c4239e8904790c5983cb6915c8f12bc9bda376730d0163649c58828e8",
   "exclusive": true,
   "baseline": {
     "module": "modules/Bilibili_compat_full_test.stoverride",
@@ -10,16 +10,20 @@
   },
   "dashboard": "https://api.bilibili.com/x/stash-banner/dashboard",
   "responseScript": {
-    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-061c93ad13155d5b/response.js",
-    "sha256": "bc7475cf2d7328f9998815d5b30e5e7648f5dc2e0294b5d148ae1adfe9f89f55"
+    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-1cdf78be0b0069d4/response.js",
+    "sha256": "0f0ad4e93487b4a38af2573a9255c0389f5cc1a6349209bdb896ec6137e3217a"
   },
   "dashboardScript": {
-    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-061c93ad13155d5b/dashboard.js",
-    "sha256": "489656c7bdc45ce81ca199b160f984ac09e2838176ffdc8c84948d759ff3b30a"
+    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-1cdf78be0b0069d4/dashboard.js",
+    "sha256": "8ae3a75d67bf01f783c32b760461a6ad82464b82f8e021425840bc3b5c4cd8d5"
   },
   "requestScript": {
-    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-061c93ad13155d5b/request.js",
-    "sha256": "ba2ab2f48e2bc3fc9724262da5da78e6ad1f3adde371967db0f4425b35549616"
+    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-1cdf78be0b0069d4/request.js",
+    "sha256": "dfec58140a6faf5a2be93276973dfee5a797615466944f008e954e3a6443e1bd"
+  },
+  "observerScript": {
+    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-1cdf78be0b0069d4/observe.js",
+    "sha256": "e6b57d94173c8881606a13e41928cccd03896bf42cd7e7ced8c17f656db59c9c"
   },
   "assets": {
     "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/chronos/2c699555b35c12f1712f19537c08a6c7.zip": "20b773cb00c44ad4631b8aa024d9592a53ff87014920b500715b0046063b839e"
@@ -33,6 +37,9 @@
     "counters not attributed to a video",
     "detail summaries 60 seconds; armed request/response presence 10 minutes",
     "temporary request metadata hooks on app/api hosts; original requests passed through",
-    "presence sampled per fixed category, not complete HTTP capture"
+    "presence sampled per fixed category, not complete HTTP capture",
+    "REST path shapes use a fixed vocabulary; other segments redacted to underscore",
+    "response observer excludes native rewrite/mock URLs and protobuf script routes",
+    "response header observation does not prove body completion"
   ]
 }

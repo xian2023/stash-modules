@@ -1,5 +1,21 @@
 # Loon 评论链路与 Stash 适配
 
+## preview.5 弹幕等待隔离
+
+当前主模块为 `2026.10.25-preview.5`。以下评论链保持 preview.4 的实现；仅弹幕空降处理改为请求/响应两阶段。用户反馈弹幕卡住之后评论也慢，代码检查发现 preview.4 弹幕先等待空降服务（最多约 1.2 秒），有片段时再用 `Wt(context,1)` 等待一次官方弹幕转发（客户端超时 3 秒）。评论代码没有直接等待弹幕的依赖，不能从此推断手机运行时的全部根因。
+
+preview.5 请求阶段只解析原始弹幕请求并加 `x-stash-bili-airborne-context`，不调用 HTTP、不转发弹幕。该头包含正文已有的 aid、CID、分包序号，随请求传给服务端，在匹配的响应阶段读取；不依赖未公开的响应脚本 `$request.body`，也不使用“最近视频”的全局关联。若头未被 Stash 保留，则不注入，原响应透传。头传递和服务端容忍仍需真机验证。
+
+响应阶段使用 App 的原始弹幕数据：缓存命中不联网；否则服务调用 `timeout:0.2` 秒，并用 250 ms 定时器限制等待。保护时间不包含脚本启动、正文缓冲或调度，也不保证取消宿主仍在进行的 HTTP。未及时取得片段时返回 `$done({})`，慢服务会降低首次空降成功率（错误缓存 60 秒、全局失败熔断 30 秒），以优先放行普通弹幕。
+
+并发响应遇到尚有效的服务租约直接放行，不排队等待。持久存储读写不是原子操作，无法保证手机上绝对只有一个服务请求。晚回调被 settled 标志丢弃；旧失败不覆盖新写入的有效片段。无匹配片段时不解压和解码普通弹幕；修改时沿用原作者的 codec 和 `nn` 触发项，保留未知字段。按注入 `progress`（片段开始加 2 秒）选择对应 6 分钟包，并避免重复注入。
+
+这是在响应交付 App 前做的限时处理，不是结束脚本后的后台工作。原有 ViewProgress chronos、MainList、DetailList 和 DialogList 逻辑不变；评论独立的主机回退仍可能增加等待。合成并发测试只能证明代码没有互相 await，不能证明 Stash 的真实调度或手机界面不再卡顿。
+
+分包依据：[API 收集项目作者的弹幕说明](https://github.com/bilibili-plugins/bilibili-api-collect/blob/master/docs/danmaku/danmaku_proto.md)。这不是对当前设备流量的抓包证明。
+
+## preview.4 评论兼容基线（当前继续保留）
+
 依据：仓库 `upstream/Bilibili_remove_ads.loon-ua.lpx` 第 16、70、72 行及 `upstream/scripts/proto_request.js` 中的 `tt`、`Wt`、`v`、`Lt`、`lt`。原插件标注日期 2026-10-02。
 
 | 行为 | 原 Loon 默认 | Stash preview.4 |

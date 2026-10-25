@@ -27,11 +27,11 @@ fs.writeFileSync('output/scripts/bilibili.live.stash.js', bundles['bili-kokoryh-
 
 const config = {
   name: '哔哩哔哩去广告 + 空降助手 · Loon 评论兼容',
-  desc: 'Loon 评论兼容链：View/MainList 及楼中楼 DetailList/DialogList 转发与主机回退；楼中楼正文原样保留。停用旧 B站和可选评论模块。实际速度需 iPhone 验证。',
+  desc: '弹幕原请求直接发送，不再脚本转发；收到响应后限时查询空降（250ms保护），命中缓存不查询。保留 Loon 一级/楼中楼评论兼容链。停用其他 B站模块，实际速度需 iPhone 验证。',
   icon: 'https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Bilibili.png',
   author: 'kokoryh (original scripts); Kelee (original rules); local Stash adaptation',
   homepage: `https://github.com/${repository.owner}/${repository.name}`,
-  category: '去广告', version: '2026.10.24-preview.4',
+  category: '去广告', version: '2026.10.25-preview.5',
   rules: [
     'DOMAIN,api.biliapi.com,REJECT', 'DOMAIN,app.biliapi.com,REJECT',
     'DOMAIN,api.biliapi.net,REJECT', 'DOMAIN,app.biliapi.net,REJECT',
@@ -81,7 +81,12 @@ const args = JSON.stringify({displayUpList:'show',purifyComment:true,optimizeReq
 config.http.script.push({
   match: '^https://(?:grpc\\.biliapi\\.net|app\\.bilibili\\.com)/bilibili\\.community\\.service\\.dm\\.v1\\.DM/DmSegMobile$',
   name: 'bili-kokoryh-request', type: 'request', 'require-body': true, 'binary-mode': true,
-  timeout: 6, 'max-size': 1048576, argument: args
+  timeout: 1, 'max-size': 1048576, argument: args
+});
+config.http.script.push({
+  match: '^https://(?:grpc\\.biliapi\\.net|app\\.bilibili\\.com)/bilibili\\.community\\.service\\.dm\\.v1\\.DM/DmSegMobile$',
+  name: 'bili-kokoryh-request', type: 'response', 'require-body': true, 'binary-mode': true,
+  timeout: 2, 'max-size': 4194304, argument: args
 });
 const responseLine = original.split('\n').find(l=>l.startsWith('response if ') && l.includes('Bilibili_proto_response_kokoryh.js'));
 const originalResponsePattern = responseLine.match(/~= \/(.*?)\/i then /)[1];
@@ -132,7 +137,7 @@ passthrough.name = '哔哩哔哩去广告 + 空降助手 · 评论直通对照';
 passthrough.desc = '不使用 Loon 的 View/MainList 请求转发，评论不执行 JS。仅供与主模块二选一排查；不是后台异步改写。';
 passthrough.http.script = passthrough.http.script.filter(h=>!h.match.includes('(?:app\\.viewunite'));
 for (const hook of passthrough.http.script) {
-  if (hook.type === 'response' && hook['binary-mode']) hook.match = '(?i)' + originalResponsePattern.replace(commentAlternative, '');
+  if (hook.type === 'response' && hook.name.startsWith('bili-kokoryh-response-')) hook.match = '(?i)' + originalResponsePattern.replace(commentAlternative, '');
 }
 fs.writeFileSync('modules/Bilibili_passthrough.stoverride',header + YAML.stringify(passthrough,{lineWidth:0}));
 const commentProviderName = `bili-kokoryh-response-${release}`;

@@ -1,5 +1,5 @@
 {
-  "version": "2026.10.25-diag.1",
+  "version": "2026.10.25-diag.2",
   "sourceVersion": "2026.10.25-preview.6",
   "sourceSha256": "ce5da6dd8a83bbe666cb39da84ae6465745c8f643bc2623ae518e117ffacadbc",
   "exclusive": true,
@@ -10,7 +10,7 @@
       "removed": "移除独立空降端点与两个 ViewProgress 路径，保留评论/详情转发及其他处理",
       "module": "modules/Bilibili_diag_01_no_airborne.stoverride",
       "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_01_no_airborne.stoverride",
-      "sha256": "5413c9c533afebb144cb8979795f50ec9b2f6f317d78eabbcb8fa414075c2cce"
+      "sha256": "4f99dd4bbcafc22f28aa1c2d282e48598bf5ea18e083c25dd6dc857ab3c8740a"
     },
     {
       "id": "02",
@@ -18,7 +18,7 @@
       "removed": "在 01 基础上移除全部 request 脚本，保留响应过滤、原生规则及解密",
       "module": "modules/Bilibili_diag_02_no_relay.stoverride",
       "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_02_no_relay.stoverride",
-      "sha256": "035e43bb0ede0a59255acd8956543c65e2efca82d08580f51d83b307dc709a3f"
+      "sha256": "fd06feccc308713481815875bee956945cf38b40f0a7c39f4d491915ee84ab7f"
     },
     {
       "id": "03",
@@ -26,7 +26,7 @@
       "removed": "在 02 基础上移除全部 JS 和 provider，仅保留原生改写/静态响应/规则及解密",
       "module": "modules/Bilibili_diag_03_no_js.stoverride",
       "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_03_no_js.stoverride",
-      "sha256": "a895080fc62a014ff12b3884629a5edca1b76b39210c3ff9d2345e6e2d7542a3"
+      "sha256": "ae84df975924848bf060c6ed666a7b3133fa0f0c768f4de50db1ead1d4a0e25c"
     },
     {
       "id": "04",
@@ -34,7 +34,49 @@
       "removed": "仅添加与主模块相同的解密域名，不添加 JS、原生改写、静态响应或拦截规则",
       "module": "modules/Bilibili_diag_04_mitm_only.stoverride",
       "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_04_mitm_only.stoverride",
-      "sha256": "7f8cdb93b0d3f78d6b20dccfc5f2818f601cb05f43aca94a11235369c5d2a4ed"
+      "sha256": "5da222e19bb345c749f07cadc9e07c2fa3eff8af6dfd1eed873b4c523a7adb6c"
+    }
+  ],
+  "hostProbes": [
+    {
+      "id": "05",
+      "title": "仅解密 grpc.biliapi.net",
+      "removed": "独立对照，只添加 grpc.biliapi.net 解密，不含广告处理；与 01–09 及所有 B站功能覆写互斥",
+      "module": "modules/Bilibili_diag_05_mitm_grpc.stoverride",
+      "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_05_mitm_grpc.stoverride",
+      "sha256": "5ac7c74313223a51f90d412665c6d3bd75efe85ede54bf1ccdf5d2c1a62c9f82"
+    },
+    {
+      "id": "06",
+      "title": "仅解密 app.bilibili.com",
+      "removed": "独立对照，只添加 app.bilibili.com 解密，不含广告处理；与 01–09 及所有 B站功能覆写互斥",
+      "module": "modules/Bilibili_diag_06_mitm_app.stoverride",
+      "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_06_mitm_app.stoverride",
+      "sha256": "d50a66e44fbbe2025e2df09abab35d12eff8df4e8bba39d12a0e558231a2b198"
+    },
+    {
+      "id": "07",
+      "title": "仅解密 api.bilibili.com",
+      "removed": "独立对照，只添加 api.bilibili.com 解密，不含广告处理；与 01–09 及所有 B站功能覆写互斥",
+      "module": "modules/Bilibili_diag_07_mitm_api.stoverride",
+      "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_07_mitm_api.stoverride",
+      "sha256": "82d2673c72aa8d196cc24f714ad878edfad5f9ceada4cbba1f145dbd96ea91c1"
+    },
+    {
+      "id": "08",
+      "title": "仅解密 api.live.bilibili.com",
+      "removed": "独立对照，只添加 api.live.bilibili.com 解密，不含广告处理；与 01–09 及所有 B站功能覆写互斥",
+      "module": "modules/Bilibili_diag_08_mitm_live.stoverride",
+      "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_08_mitm_live.stoverride",
+      "sha256": "49a6ac52eff1cdf3ec2d5eb001d6c87578e3a9bc27ee45c4c3d6c07c4316b33f"
+    },
+    {
+      "id": "09",
+      "title": "仅解密 line3-h5-mobile-api.biligame.com",
+      "removed": "独立对照，只添加 line3-h5-mobile-api.biligame.com 解密，不含广告处理；与 01–09 及所有 B站功能覆写互斥",
+      "module": "modules/Bilibili_diag_09_mitm_game.stoverride",
+      "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_09_mitm_game.stoverride",
+      "sha256": "fd0427efdfe53c19d68b0cecc659f5d6cdc4144cdb074039736de7a1f465552b"
     }
   ]
 }

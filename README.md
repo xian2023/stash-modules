@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/X_Web_remo
 
 ## Bilibili 去广告与空降
 
-**仍有卡顿时，先用 [四级互斥对照模块](docs/BILIBILI_DIAGNOSIS.md) 定位。一次只开一个，先关空降，再关请求转发、全部 JS、最后仅保留解密；主模块保持原样，不继续盲改超时。**
+**当前真机反馈：关闭全部 B站覆写正常，01–04（包括仅解密）均卡。优先用 [单域名解密对照 05/06](docs/BILIBILI_DIAGNOSIS.md) 查连接与有效配置；这组结果不支持直接归因广告回包或空降等待。诊断覆写互斥，主模块尚未通过该手机的性能验收，日常可先停用。**
 
 基于 Kelee 2026-10-02 规则和 kokoryh/Sparkle 脚本适配。
 
@@ -32,7 +32,7 @@ https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/X_Web_remo
 https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_remove_ads.stoverride
 ```
 
-关闭以前导入的 B站去广告覆写，包括旧的本地预览模块和「评论去广告 · 可选」；只启用本主模块。开启 HTTPS 解密并完全信任 Stash CA 证书，随后完全退出 Bilibili 再打开。已订阅同一地址时，刷新覆写并确认版本为 `2026.10.24-preview.4`。
+关闭以前导入的 B站去广告覆写，包括旧的本地预览模块和「评论去广告 · 可选」；只启用本主模块。开启 HTTPS 解密并完全信任 Stash CA 证书，随后完全退出 Bilibili 再打开。已订阅同一地址时，刷新覆写并确认版本为 `2026.10.25-preview.6`。
 
 主模块约 13 KiB，脚本单独下载并缓存，避免把大量 JS 内嵌在覆写配置里。模块及脚本均使用 HTTPS。新脚本使用内容版本目录和新的 provider 名称，以免更新配置后混用旧缓存。
 

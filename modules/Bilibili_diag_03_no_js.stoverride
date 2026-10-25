@@ -1,11 +1,11 @@
-# Mutually exclusive cumulative Bilibili diagnostic. Not a patch over the main module.
+# Mutually exclusive Bilibili diagnostic. Not a patch over the main module.
 name: B站排查 03 · 再关闭全部 JS
 desc: 与主模块、评论直通、可选评论及其他 B站覆写互斥。完全退出 B站、重连 Stash 后，用相同视频复测。在 02 基础上移除全部 JS 和 provider，仅保留原生改写/静态响应/规则及解密；见仓库分阶段排查说明。
 icon: https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Bilibili.png
 author: kokoryh (original scripts); Kelee (original rules); local Stash adaptation
 homepage: https://github.com/xian2023/stash-modules
 category: 诊断
-version: 2026.10.25-diag.1
+version: 2026.10.25-diag.2
 rules:
   - DOMAIN,api.biliapi.com,REJECT
   - DOMAIN,app.biliapi.com,REJECT

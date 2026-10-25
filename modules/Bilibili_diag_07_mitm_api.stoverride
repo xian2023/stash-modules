@@ -1,0 +1,9 @@
+# Mutually exclusive Bilibili diagnostic. Not a patch over the main module.
+name: B站排查 07 · 仅解密 api.bilibili.com
+desc: 与主模块、评论直通、可选评论及其他 B站覆写互斥。完全退出 B站、重连 Stash 后，用相同视频复测。独立对照，只添加 api.bilibili.com 解密，不含广告处理；与 01–09 及所有 B站功能覆写互斥；见仓库分阶段排查说明。
+version: 2026.10.25-diag.2
+category: 诊断
+homepage: https://github.com/xian2023/stash-modules
+http:
+  mitm:
+    - api.bilibili.com

@@ -40,4 +40,19 @@ for(const host of ['grpc.biliapi.net','app.bilibili.com']) {
 assert.equal(stages[2].http.script.length,0);assert.equal(stages[2]['script-providers'],undefined);
 assert.deepEqual(stages[3].http,{mitm:main.http.mitm});
 assert.deepEqual(Object.keys(stages[3]).sort(),['name','desc','version','category','homepage','http'].sort());
+assert.equal(manifest.hostProbes.length,5);
+const probeHosts=[];
+for(const definition of manifest.hostProbes) {
+  const text=read(definition.module),config=YAML.parse(text);
+  assert.equal(crypto.createHash('sha256').update(text).digest('hex'),definition.sha256);
+  assert.equal(config.version,manifest.version);
+  assert(!text.includes('#!replace'));
+  assert.deepEqual(Object.keys(config).sort(),Object.keys(stages[3]).sort());
+  assert.deepEqual(Object.keys(config.http),['mitm']);
+  assert.equal(config.http.mitm.length,1);
+  probeHosts.push(config.http.mitm[0]);
+  assert.equal(definition.url,`https://raw.githubusercontent.com/xian2023/stash-modules/main/${definition.module}`);
+}
+assert.deepEqual(probeHosts,main.http.mitm);
 console.log('PASS Bili diagnostics: source/file hashes, exact stage boundaries, both hosts, no airborne/ViewProgress/DM interception, provider pruning, preserved native rules and MitM-only isolation');
+console.log('PASS single-host diagnostics: five separate exclusive MitM-only files, complete hostname coverage, hashes and remote URLs');

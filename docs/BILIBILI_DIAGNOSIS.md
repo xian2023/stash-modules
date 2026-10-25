@@ -1,6 +1,6 @@
 # B站卡顿：互斥分阶段定位
 
-目标是找出哪一组处理与当前手机的卡顿有关，而不是继续假定空降服务是唯一原因。主模块暂保持 `2026.10.25-preview.6` 原样；本页对照模块为 `2026.10.25-diag.1`，由同一版本自动构建。源版本及文件哈希在 `modules/Bilibili_diagnostics.manifest.json`。
+目标是找出哪一组处理与当前手机的卡顿有关，而不是继续假定空降服务是唯一原因。主模块暂保持 `2026.10.25-preview.6` 原样；本页对照模块为 `2026.10.25-diag.2`，由同一版本自动构建。源版本及文件哈希在 `modules/Bilibili_diagnostics.manifest.json`。
 
 ## 先建立基线，再逐级关闭
 
@@ -39,6 +39,28 @@
 - 04 仍卡、全部 B站覆写关闭正常：优先查新增解密域名与有效 HTTP 配置，结合 TLS/HTTP/2 错误和耗时定位。04 不添加脚本，但基础配置或别的覆写可能已有脚本，开启解密会让它们开始命中。
 - 所有档位及基线都卡：此时无法用本模块的功能差异解释，先处理节点、基础规则和 App 状态。
 
+## 全关正常、01–04 都卡：改查单域名解密
+
+本轮用户已反馈：关闭全部 B站覆写后正常，01–04 均卡。04 文件只有元信息和 `http.mitm`，没有广告拦截、模拟响应、脚本或空降处理。因此，这组结果不支持“本模块修改广告回包导致客户端等待”的解释；当前优先查解密后的连接和其他配置，而非继续调整空降时机。尚不能据此确认是证书、HTTP/2、App 校验或其他某一种具体原因。
+
+以下五份都是**独立的单域名对照**，不是累加步骤。先停用 01–04、主模块及其他 B站覆写，每次只开一份。优先测 05，再停用 05 测 06；若其中某份复现，就先记录日志，不必立即把后续全部测完。每次完全退出 B站、重连 Stash 后用同一视频复测。
+
+| 对照 | 仅添加的解密域名 | 远程地址 |
+| --- | --- | --- |
+| 05 | `grpc.biliapi.net` | [Bilibili_diag_05_mitm_grpc.stoverride](https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_05_mitm_grpc.stoverride) |
+| 06 | `app.bilibili.com` | [Bilibili_diag_06_mitm_app.stoverride](https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_06_mitm_app.stoverride) |
+| 07 | `api.bilibili.com` | [Bilibili_diag_07_mitm_api.stoverride](https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_07_mitm_api.stoverride) |
+| 08 | `api.live.bilibili.com` | [Bilibili_diag_08_mitm_live.stoverride](https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_08_mitm_live.stoverride) |
+| 09 | `line3-h5-mobile-api.biligame.com` | [Bilibili_diag_09_mitm_game.stoverride](https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_diag_09_mitm_game.stoverride) |
+
+这些文件均不含广告处理，也不更改分流、DNS、证书或协议选项。单域名表示该文件只添加一个域名，不会删除基础配置或其他覆写中的解密列表、脚本和规则；若实际生效配置已经包含更广通配符，就不能把它当成真正的单域名实验。
+
+- 某一份单独启用就卡：将该域名作为下一轮重点；查看同一时段的接口耗时、TLS handshake/EOF、HTTP/2、stream reset、timeout 等日志。错误类型只是候选证据，不能预先认定一定会出现。
+- 五份单独都正常、04 仍卡：可能涉及多个域名共同启用、请求主机回退或连接并发；需要组合对照，不能认定单域名都没问题就已修好。
+- 没有该域名请求：正常结果只能说明本次未复现，不能证明该连接兼容。
+
+反馈只需“05 正常/卡，06 正常/卡”、Stash 和 B站版本，以及卡住时的域名、接口、错误类型和大致耗时。不要发送 Cookie、令牌或完整请求正文。证书方面先只读检查当前生效的 Stash CA 是否已在 iOS 完全信任，不要求删除或重新生成证书。当前主模块仍未通过这台手机的性能验收，日常使用可先保持停用。
+
 ## 当前源码能确认的等待
 
 preview.6 已没有 `DmSegMobile` 请求/响应 hook，因此当前卡顿不能仅凭表现继续归因于之前的弹幕查询等待；这也不能证明播放器资源或空降独立任务一定没有影响。
@@ -49,7 +71,7 @@ preview.6 已没有 `DmSegMobile` 请求/响应 hook，因此当前卡顿不能�
 
 ## 不干扰其他配置的边界
 
-每份对照都保留相同的 MitM 列表，不使用全局 `#!replace` 清空用户规则，也不改变节点/策略组。由于 Stash 覆写默认会合并数组，**启用一个“更精简”的模块不能关闭另一个仍启用模块的脚本**；互斥使用是本实验成立的前提。
+01–04 保留相同的 MitM 列表，05–09 各自只添加一个域名，不使用全局 `#!replace` 清空用户规则，也不改变节点/策略组。由于 Stash 覆写默认会合并数组，**启用一个“更精简”的模块不能关闭另一个仍启用模块的脚本**；互斥使用是本实验成立的前提。
 
 测试结束后停用诊断版。需要恢复主模块时也只开主模块，不与诊断、直通或可选评论版并用。日志反馈只需接口名、错误类型和大致耗时，不需要请求头、Cookie、令牌或正文。
 

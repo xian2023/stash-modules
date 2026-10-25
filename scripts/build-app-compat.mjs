@@ -32,7 +32,8 @@ export function buildAppCompatibility(main,rawBase) {
   fs.writeFileSync('modules/Bilibili_app_compat.manifest.json',JSON.stringify({
     version:config.version,module,url:`${rawBase}/${module}`,sha256:sha(text),exclusive:true,
     sourceVersion:main.version,sourceSha256:sha(fs.readFileSync('modules/Bilibili_remove_ads.stoverride')),
-    baseline:'User reports 05 (grpc-only MitM) slow and 06 (app-only MitM) normal; filtering preview not yet phone-verified',
+    baseline:'User reports 05 (grpc-only MitM) slow, 06 (app-only MitM) normal, and app-preview.1 loading normal',
+    verification:{status:'user-reported-loading-normal',scope:'Overall loading reported normal on standard Bilibili iPhone app',adCoverage:'Not individually verified',appVersion:null,stashVersion:null},
     features:['app splash list mock','app splash show/event native filter','app home feed native filter','app story feed native filter'],
     excluded:['grpc MitM','other MitM hosts','JavaScript','request relay','comments','danmaku','airborne','domain rejects'],
   },null,2)+'\n');

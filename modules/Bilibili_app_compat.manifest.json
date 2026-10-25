@@ -6,7 +6,14 @@
   "exclusive": true,
   "sourceVersion": "2026.10.25-preview.6",
   "sourceSha256": "ce5da6dd8a83bbe666cb39da84ae6465745c8f643bc2623ae518e117ffacadbc",
-  "baseline": "User reports 05 (grpc-only MitM) slow and 06 (app-only MitM) normal; filtering preview not yet phone-verified",
+  "baseline": "User reports 05 (grpc-only MitM) slow, 06 (app-only MitM) normal, and app-preview.1 loading normal",
+  "verification": {
+    "status": "user-reported-loading-normal",
+    "scope": "Overall loading reported normal on standard Bilibili iPhone app",
+    "adCoverage": "Not individually verified",
+    "appVersion": null,
+    "stashVersion": null
+  },
   "features": [
     "app splash list mock",
     "app splash show/event native filter",

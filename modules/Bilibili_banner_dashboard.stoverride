@@ -5,7 +5,7 @@ icon: https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/
 author: kokoryh (original scripts); Kelee (original rules); local Stash adaptation
 homepage: https://github.com/xian2023/stash-modules
 category: 诊断
-version: 2026.10.25-banner-panel.1
+version: 2026.10.25-banner-panel.2
 rules:
   - AND,((DOMAIN-SUFFIX,chat.bilibili.com),(OR,((DOMAIN-KEYWORD,stun),(DOMAIN-KEYWORD,tracker),(DOMAIN-KEYWORD,p2p)))),REJECT
 http:
@@ -46,8 +46,14 @@ http:
       headers:
         Content-Type: application/json; charset=utf-8
   script:
+    - match: ^https://(?:(?:app|api)\.bilibili\.com/(?!x/stash-)|app\.bilibili\.com/x/stash-banner/check$)
+      name: bili-banner-request-061c93ad13155d5b
+      type: request
+      require-body: false
+      timeout: 1
+      max-size: 1024
     - match: ^https://api\.bilibili\.com/x/stash-banner/(?:dashboard|status|reset)$
-      name: bili-banner-dashboard-3e32b6d9f44536b0
+      name: bili-banner-dashboard-061c93ad13155d5b
       type: request
       require-body: false
       timeout: 2
@@ -59,7 +65,7 @@ http:
       timeout: 4
       max-size: 1024
     - match: ^https://app\.bilibili\.com/bilibili\.(?:app\.show\.v1\.Popular/Index|app\.dynamic\.v2\.Dynamic/DynAll|polymer\.app\.search\.v1\.Search/SearchAll|app\.view\.v1\.View/View|app\.viewunite\.v1\.View/View|app\.view\.v1\.View/RelatesFeed|app\.viewunite\.v1\.View/RelatesFeed|app\.viewunite\.v1\.View/AIRelateAsync|main\.community\.reply\.v1\.Reply/MainList|app\.view\.v1\.View/ViewProgress|app\.viewunite\.v1\.View/ViewProgress|app\.playurl\.v1\.PlayURL/PlayView|app\.playerunite\.v1\.Player/PlayViewUnite|pgc\.gateway\.player\.v2\.PlayURL/PlayView|community\.service\.dm\.v1\.DM/DmView)$
-      name: bili-banner-panel-probe-3e32b6d9f44536b0
+      name: bili-banner-panel-probe-061c93ad13155d5b
       type: response
       require-body: true
       binary-mode: true
@@ -80,9 +86,12 @@ script-providers:
   bili-airborne-worker-7d2850e383a5b312:
     url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/sponsor.js
     interval: 86400
-  bili-banner-panel-probe-3e32b6d9f44536b0:
-    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-3e32b6d9f44536b0/response.js
+  bili-banner-panel-probe-061c93ad13155d5b:
+    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-061c93ad13155d5b/response.js
     interval: 86400
-  bili-banner-dashboard-3e32b6d9f44536b0:
-    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-3e32b6d9f44536b0/dashboard.js
+  bili-banner-dashboard-061c93ad13155d5b:
+    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-061c93ad13155d5b/dashboard.js
+    interval: 86400
+  bili-banner-request-061c93ad13155d5b:
+    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-061c93ad13155d5b/request.js
     interval: 86400

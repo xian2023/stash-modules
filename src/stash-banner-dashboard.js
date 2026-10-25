@@ -1,7 +1,7 @@
 // The HTML placeholder is replaced with a JSON string at build time.
 (() => {
   const base='https://api.bilibili.com/x/stash-banner/';
-  const headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"};
+  const headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://app.bilibili.com; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"};
   if($request.url===base+'dashboard'&&$request.method==='GET') {
     $done({response:{status:200,headers:{...headers,'Content-Type':'text/html; charset=utf-8'},body:STASH_BANNER_DASHBOARD_HTML}});
     return;
@@ -12,7 +12,7 @@
       $done({response:{status:405,headers:{...headers,'Content-Type':'application/json'},body:'{"cleared":false}'}});return;
     }
     let cleared=false;
-    try{cleared=$persistentStore.write('{"version":1,"events":[]}','bili.stash.banner.ui.v1')!==false;}catch(_){}
+    try{const first=$persistentStore.write('{"version":1,"events":[]}','bili.stash.banner.ui.v1')===true;const second=$persistentStore.write(JSON.stringify({version:1,startedAt:Date.now(),selfCheckAt:null,requests:[],responses:[]}),'bili.stash.banner.transport.v1')===true;cleared=first&&second;}catch(_){}
     $done({response:{status:cleared?200:503,headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({cleared})}});return;
   }
   if($request.url===base+'status'&&$request.method==='GET') {
@@ -44,7 +44,7 @@
       STASH_BANNER_STATUS_HANDLER
     })({read:()=>raw},result=>{
       result.response.headers={...result.response.headers,...headers};
-      result.response.body=JSON.stringify({...JSON.parse(result.response.body),storageState});
+      result.response.body=JSON.stringify({...JSON.parse(result.response.body),storageState,transport:stashBannerTransport('read')});
       $done(result);
     });
     return;

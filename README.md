@@ -50,7 +50,7 @@ https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_c
 https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_banner_dashboard.stoverride
 ```
 
-版本 `2026.10.25-banner-panel.1`。停用其他 B站覆写，只启用这份并重连 Stash；在 iPhone Safari 打开 [本机面板](https://api.bilibili.com/x/stash-banner/dashboard)，点“开始本轮诊断”，切到 B站复现广告，再于 60 秒内返回点“刷新结果”，提供结果截图。页面、状态及清空操作由 Stash 本机响应，不上传摘要；保持当前解密范围及普通播放器资源。面板能打开不代表响应过滤已经运行，没有记录也不能确定广告来自哪个域名。手机接管效果待确认；诊断结束切回完整兼容版。[面板说明与解释边界](docs/BILIBILI_DIAGNOSIS.md)。
+版本 `2026.10.25-banner-panel.2`。停用其他 B站覆写，只启用这份并重连 Stash；在 iPhone Safari 打开 [本机面板](https://api.bilibili.com/x/stash-banner/dashboard)，点“开始本轮诊断”，确认 app 域名自检结果，切到 B站重新打开视频复现广告，再返回点“刷新结果”，提供“接管与脚本入口”的截图。请求/响应入口观察窗口为 10 分钟，详情字段摘要仍为 60 秒。页面、状态、清空和 app 域名自检由 Stash 本机响应；新增临时请求探针只记固定类别、直接放行，不读取正文或上传摘要；保持当前解密范围及普通播放器资源。面板能打开不代表响应过滤已经运行，没有记录也不能确定广告来自哪个域名。第一版面板和状态读取已在手机生效，但返回空记录；第二版新增的请求/响应入口仍待确认；诊断结束切回完整兼容版。[面板说明与解释边界](docs/BILIBILI_DIAGNOSIS.md)。
 
 ### 保留对照：独立功能测试 01
 

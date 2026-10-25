@@ -11,28 +11,43 @@
 <body><main>
 <span class="tag">Stash 本机面板 · 页面已连接</span>
 <h1>B站横幅诊断</h1>
-<p class="muted">版本 2026.10.25-banner-panel.1 · 不依赖 B站内提示或日志搜索</p>
+<p class="muted">版本 2026.10.25-banner-panel.2 · 不依赖 B站内提示或日志搜索</p>
 <section class="card">
 <h2>开始一次可核对的测试</h2>
 <ol><li>点“开始本轮诊断”，只清空本机诊断摘要。</li><li>切到 B站，打开视频，看到横幅后尽快切回 Safari。</li><li>点“刷新结果”，截图结果即可。</li></ol>
-<p class="muted">只读取最近 60 秒各类接口的最新记录，不是完整时间线，也不对应某个视频。超过窗口请重新开始。不需要保持视频前台播放，也不需要播放器资源成功加载。</p>
+<p class="muted">开始后观察 10 分钟，记录固定接口类别的请求/响应入口；详情字段摘要仍只保留 60 秒。不是完整抓包，也不对应某个视频。不需要保持视频前台播放或等待播放器提示。</p>
 <div class="actions"><button id="start">开始本轮诊断</button><button id="refresh" class="secondary">刷新结果</button></div>
 <p id="notice" role="status">页面已经打开，正在检查本机状态接口…</p>
 </section>
-<section class="card"><h2>接口处理结果</h2><div id="results"></div><details><summary>可截图的脱敏摘要</summary><pre id="raw">尚未读取</pre></details></section>
-<section class="card"><h2>如何解读</h2><p>“已处理”只代表脚本完成，不代表截图中的广告已经找到。“计数未知”可能是摘要超限或无法解析。</p><p>面板正常但没有记录时，可能是接口未命中、记录过期或过滤脚本未运行。不能直接认定广告来自 grpc。</p><p class="muted">本页、状态和清空操作均由 Stash 本机直接响应，没有第三方资源或数据上传。不要关闭 Stash 后访问；未启用对应模块时原站不提供此页面。</p></section>
+<section class="card"><h2>接管与脚本入口</h2><div id="transport"></div></section>
+<section class="card"><h2>最近 60 秒详情字段摘要</h2><div id="results"></div><details><summary>可截图的脱敏摘要</summary><pre id="raw">尚未读取</pre></details></section>
+<section class="card"><h2>如何解读</h2><p>“已处理”只代表脚本完成，不代表截图中的广告已经找到。“计数未知”可能是摘要超限或无法解析。</p><p>面板正常但没有记录时，可能是接口未命中、记录过期或过滤脚本未运行。不能直接认定广告来自 grpc。</p><p class="muted">本页、状态、清空和 app 域名自检由 Stash 本机响应。临时请求探针直接放行原请求，只记录固定类别，不读取正文、请求头或查询参数。域名请求也可能来自其他应用，不能仅凭它认定是 B站 App。不要关闭 Stash 后访问；未启用对应模块时原站不提供此页面。</p></section>
 </main><script>
 'use strict';
 const notice=document.getElementById('notice'),results=document.getElementById('results'),raw=document.getElementById('raw');
-const start=document.getElementById('start'),refresh=document.getElementById('refresh');
+const start=document.getElementById('start'),refresh=document.getElementById('refresh'),transport=document.getElementById('transport');
 const names={view:'经典视频详情',viewunite:'统一视频详情',relates:'经典相关推荐','relates-unite':'统一相关推荐','async-relates':'异步相关推荐'};
 function controls(busy){start.disabled=busy;refresh.disabled=busy;}
 function emptyResults(message){results.replaceChildren();const line=document.createElement('p');line.textContent=message;results.append(line);}
 function number(value){return Number.isInteger(value)&&value>=0&&value<=1000000?value:null;}
+const routeNames={...names,popular:'热门',dynamic:'动态',search:'搜索',comments:'一级评论',progress:'经典播放器资源', 'progress-unite':'统一播放器资源',play:'经典播放', 'play-unite':'统一播放','play-pgc':'番剧播放','dm-view':'弹幕配置','app-other-protobuf':'app 其他 protobuf 路径','app-json':'app JSON 类路径','api-json':'api JSON 类路径','app-other':'app 其他路径','api-other':'api 其他路径'};
+function transportLine(text){const line=document.createElement('p');line.textContent=text;transport.append(line);}
+function renderTransport(value){
+  transport.replaceChildren();
+  if(!value||!['ready','empty'].includes(value.storageState)){transportLine('请求/响应入口记录读取失败，不能判断为未命中。');return;}
+  if(!value.armed){transportLine('尚未开始或已超过 10 分钟，请点“开始本轮诊断”。');return;}
+  if(value.windowSeconds!==600||!Number.isInteger(value.remainingSeconds)||!Array.isArray(value.requests)||!Array.isArray(value.responses)||value.requests.length>24||value.responses.length>24)throw Error('invalid transport');
+  for(const side of ['requests','responses'])for(const item of value[side])if(!Object.hasOwn(routeNames,item?.route)||!Number.isInteger(item.ageSeconds)||item.ageSeconds<0||item.ageSeconds>600)throw Error('invalid transport entry');
+  transportLine('观察进行中，剩余约 '+value.remainingSeconds+' 秒。');
+  transportLine(value.selfCheckAgeSeconds===null?'app 域名自检尚未确认成功。':'app 域名请求自检已写入（'+value.selfCheckAgeSeconds+' 秒前）。这是 Safari 自检，不是 B站 App 的接口命中。');
+  transportLine('请求入口：'+(value.requests.length?value.requests.map(item=>routeNames[item.route]+'（'+item.ageSeconds+'秒前）').join('、'):'本轮尚无记录。'));
+  transportLine('过滤脚本入口：'+(value.responses.length?value.responses.map(item=>routeNames[item.route]+'（'+item.ageSeconds+'秒前）').join('、'):'本轮尚无记录。'));
+  transportLine('自检成功且有请求、但没有过滤入口时，继续检查接口类别和响应脚本；三者均无业务记录时，也不能据此确定 grpc 来源。记录按类别限频，不是请求次数。');
+}
 function render(report){
   if(report?.version!==1||report.windowSeconds!==60||!Array.isArray(report.events)||report.events.length>5)throw Error('invalid status');
   for(const event of report.events){if(!Object.hasOwn(names,event?.route)||!['processed','fail-open','script-start'].includes(event.event))throw Error('invalid event');}
-  results.replaceChildren();raw.textContent=JSON.stringify(report,null,2);
+  renderTransport(report.transport);results.replaceChildren();raw.textContent=JSON.stringify(report,null,2);
   if(!report.events.length){emptyResults('最近60秒没有有效的详情/关联记录。请先开始本轮诊断，复现广告后尽快刷新；没有记录不能确定接口域名。');return;}
   for(const event of report.events){
     const item=document.createElement('div');item.className='result';const title=document.createElement('strong');title.textContent=names[event.route];item.append(title);
@@ -48,8 +63,18 @@ function render(report){
   }
 }
 async function readStatus(){const response=await fetch('/x/stash-banner/status',{cache:'no-store',credentials:'omit'});const data=await response.json();if(!response.ok){const error=Error('status unavailable');error.storageFailure=data?.storageState==='unavailable';throw error;}return data;}
-async function update(){controls(true);try{render(await readStatus());notice.textContent='状态接口已连接。读取时间：'+new Date().toLocaleTimeString()+'。';}catch(error){notice.textContent=error?.storageFailure?'本机摘要存储不可用。可以点“开始本轮诊断”重建；不能判断为未命中。':'页面已打开，但状态读取失败。请确认只启用了本面板模块、Stash 仍在连接，然后重试。';emptyResults('没有有效结果，不能判断为未命中。');raw.textContent='状态读取失败';}finally{controls(false);}}
-start.addEventListener('click',async()=>{controls(true);try{const response=await fetch('/x/stash-banner/reset',{method:'POST',headers:{'X-Stash-Banner-Action':'reset'},cache:'no-store',credentials:'omit'});const data=await response.json();if(!response.ok||data?.cleared!==true)throw Error('reset failed');render(await readStatus());notice.textContent='本轮已开始。现在切到 B站，看到横幅后尽快回来点“刷新结果”。';}catch(_){notice.textContent='开始失败，本轮尚未确认清空。检查 Stash 连接后再试。';}finally{controls(false);}});
+async function update(){controls(true);try{render(await readStatus());notice.textContent='状态接口已连接。读取时间：'+new Date().toLocaleTimeString()+'。';}catch(error){notice.textContent=error?.storageFailure?'本机摘要存储不可用。可以点“开始本轮诊断”重建；不能判断为未命中。':'页面已打开，但状态读取失败。请确认只启用了本面板模块、Stash 仍在连接，然后重试。';transport.replaceChildren();transportLine('状态读取失败，入口记录未知。');emptyResults('没有有效结果，不能判断为未命中。');raw.textContent='状态读取失败';}finally{controls(false);}}
+start.addEventListener('click',async()=>{
+  controls(true);
+  try{
+    const response=await fetch('/x/stash-banner/reset',{method:'POST',headers:{'X-Stash-Banner-Action':'reset'},cache:'no-store',credentials:'omit'});
+    const data=await response.json();if(!response.ok||data?.cleared!==true)throw Error('reset failed');
+    let checked=false;
+    try{const check=await fetch('https://app.bilibili.com/x/stash-banner/check',{cache:'no-store',credentials:'omit'});const value=await check.json();checked=check.ok&&value?.probe==='app-request'&&value.saved===true;}catch(_){}
+    render(await readStatus());
+    notice.textContent=checked?'本轮已开始，app 域名自检通过。现在切到 B站打开视频，复现后回来刷新；观察窗口 10 分钟。':'本轮已开始，但 app 域名自检未通过。请先截图本页，不能把空记录判断为接口未命中。';
+  }catch(_){notice.textContent='开始失败，本轮尚未确认清空。检查 Stash 连接后再试。';}finally{controls(false);}
+});
 refresh.addEventListener('click',update);
 update();
 </script></body></html>

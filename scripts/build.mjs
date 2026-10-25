@@ -6,6 +6,7 @@ import { buildChronos } from './build-chronos.mjs';
 import { buildDiagnostics } from './build-diagnostics.mjs';
 import { buildAppCompatibility } from './build-app-compat.mjs';
 import { buildAppExperiments } from './build-app-experiments.mjs';
+import { buildFullCompatibility } from './build-full-compat.mjs';
 
 const read = file => fs.readFileSync(file, 'utf8');
 fs.mkdirSync('output/scripts', {recursive:true});
@@ -137,6 +138,7 @@ fs.writeFileSync('modules/Bilibili_remove_ads.stoverride',header + YAML.stringif
 buildDiagnostics(remote,rawBase);
 buildAppCompatibility(remote,rawBase);
 buildAppExperiments(remote,rawBase);
+buildFullCompatibility(remote,rawBase);
 // Keep the prior behavior available as a mutually exclusive diagnostic option.
 const passthrough = structuredClone(remote);
 passthrough.name = '哔哩哔哩去广告 + 空降助手 · 评论直通对照';

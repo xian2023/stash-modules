@@ -1,5 +1,13 @@
 # Changes
 
+## Bilibili 2026.10.25-compat-full-test.1
+
+- 用户反馈测试 01 除视频下方横幅外正常，并要求一次恢复完整功能，出问题再二分；新增独立完整兼容测试，不覆盖已正常的精简版或测试 01。
+- 恢复 app 主机 15 条内容/详情/相关推荐/评论/播放/DMView/ViewProgress 响应路由、直播和原生过滤，以及延后空降 worker/Chronos 链。
+- 继续排除 grpc 解密、grpc-only mocks、原请求重放和四条备用 API REJECT；楼中楼与 DmSegMobile 无 hook。新增 api/直播/游戏解密域名待真机验证。
+- 保留原上游界面与播放响应调整；实际走 grpc 的横幅和资源不覆盖，空降需 app-host ViewProgress 及手机成功加载播放器资源。
+- 添加完整配置/资产指纹、冻结基线断言、实际详情推广字段与关联正常项、评论、gzip、错误放行和两种 app ViewProgress 检查。出问题按清单分组构建互斥替代配置二分。
+
 ## Bilibili 2026.10.25-app-test.1
 
 - 在用户已确认正常的 app 精简版上制作独立完整替代测试 01，仅新增 app 域名热门、动态、搜索三个接口的响应过滤。

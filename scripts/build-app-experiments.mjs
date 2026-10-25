@@ -34,7 +34,8 @@ export function buildAppExperiments(main,rawBase) {
       added:'Response-only filtering of app Popular/Index, Dynamic/DynAll and Search/SearchAll',
       routes:routes.map(route=>`https://app.bilibili.com/bilibili.${route}`),
       script:{url:provider.url,sha256:sha(fs.readFileSync(provider.url.slice(rawBase.length+1)))},
-      deviceStatus:'awaiting-test',
+      deviceStatus:'user-reported-loading-normal-banner-remains',
+      deviceNote:'User reports a banner below the video; everything else normal. App-route hits not independently confirmed.',
     }],
   },null,2)+'\n');
 }

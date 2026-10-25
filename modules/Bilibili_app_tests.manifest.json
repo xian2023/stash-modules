@@ -22,7 +22,8 @@
         "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/response.js",
         "sha256": "45634d9026f6d060ad832e74bbfdfb051b7a6736d014d5cff98124b40c6fbef5"
       },
-      "deviceStatus": "awaiting-test"
+      "deviceStatus": "user-reported-loading-normal-banner-remains",
+      "deviceNote": "User reports a banner below the video; everything else normal. App-route hits not independently confirmed."
     }
   ]
 }

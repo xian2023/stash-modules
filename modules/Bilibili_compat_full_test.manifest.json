@@ -1,0 +1,80 @@
+{
+  "version": "2026.10.25-compat-full-test.1",
+  "module": "modules/Bilibili_compat_full_test.stoverride",
+  "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_compat_full_test.stoverride",
+  "sha256": "bdfc9e53c726817ec0d29450b678524ef4e0a0174466a570e4aecb3e0c150939",
+  "exclusive": true,
+  "deviceStatus": "awaiting-test",
+  "baseline": {
+    "module": "modules/Bilibili_app_compat.stoverride",
+    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_app_compat.stoverride",
+    "sha256": "67edc948f37ddd9353bbab3c133794daa4b827ac66c953b39900ca6789fc559c"
+  },
+  "previousTest": {
+    "module": "modules/Bilibili_app_test_01_feed.stoverride",
+    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_app_test_01_feed.stoverride",
+    "sha256": "68316da3ff7bc7103a38ec58f3149e868c24bebc2199f948cd6d4832a4ed64e6"
+  },
+  "source": {
+    "module": "modules/Bilibili_remove_ads.stoverride",
+    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_remove_ads.stoverride",
+    "sha256": "ce5da6dd8a83bbe666cb39da84ae6465745c8f643bc2623ae518e117ffacadbc"
+  },
+  "scripts": {
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/response.js": "45634d9026f6d060ad832e74bbfdfb051b7a6736d014d5cff98124b40c6fbef5",
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/live.js": "507bf43b89ad3bc4615333a1ec2fc145ede67a2479223e69023eef552034737e",
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/sponsor.js": "cae9e53cca89a06d2658c23d6ef96f06bc895551461f60fea22f0a22e6eb4998"
+  },
+  "assets": {
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/chronos/2c699555b35c12f1712f19537c08a6c7.zip": "20b773cb00c44ad4631b8aa024d9592a53ff87014920b500715b0046063b839e"
+  },
+  "groups": {
+    "contentAndComments": [
+      "app.show.v1.Popular/Index",
+      "app.dynamic.v2.Dynamic/DynAll",
+      "polymer.app.search.v1.Search/SearchAll",
+      "app.view.v1.View/View",
+      "app.viewunite.v1.View/View",
+      "app.view.v1.View/RelatesFeed",
+      "app.viewunite.v1.View/RelatesFeed",
+      "app.viewunite.v1.View/AIRelateAsync",
+      "main.community.reply.v1.Reply/MainList"
+    ],
+    "playerAndAirborne": [
+      "app.view.v1.View/ViewProgress",
+      "app.viewunite.v1.View/ViewProgress",
+      "app.playurl.v1.PlayURL/PlayView",
+      "app.playerunite.v1.Player/PlayViewUnite",
+      "pgc.gateway.player.v2.PlayURL/PlayView",
+      "community.service.dm.v1.DM/DmView"
+    ],
+    "live": [
+      "live JSON response"
+    ],
+    "native": [
+      "native jq",
+      "JSON mocks",
+      "URL reject-dict",
+      "P2P rule"
+    ],
+    "addedMitm": [
+      "api.bilibili.com",
+      "api.live.bilibili.com",
+      "line3-h5-mobile-api.biligame.com"
+    ]
+  },
+  "exclusions": [
+    "grpc MitM",
+    "grpc-only mocks",
+    "original request relay",
+    "alternate API rejects",
+    "DmSegMobile hooks",
+    "nested reply hooks"
+  ],
+  "limits": [
+    "grpc traffic is not filtered",
+    "airborne needs app-host ViewProgress and accepted Chronos resource",
+    "added MitM hosts are not yet phone-verified"
+  ],
+  "bisectPlan": "If slow, keep the accepted baseline intact and split content/native versus player/airborne/live processing with the same four MitM hosts; if four-host MitM alone is slow, split added hostnames first."
+}

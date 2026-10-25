@@ -30,9 +30,23 @@ https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_a
 
 **关闭主模块、01–09、评论直通/可选版及其他 B站覆写，只开这一份；完全退出 B站，重连 Stash 后再打开。** 它不会移除基础配置或其他覆写的解密域名，仍需确认没有其他来源开启 grpc 解密。
 
-### 独立功能测试 01
+### 完整兼容测试：一次恢复，再按需二分
 
-用户已授权逐项恢复功能，当前只测试 **app 域名的热门、动态、搜索响应过滤**：
+测试 01 的用户反馈是“视频下面有广告横幅，其他正常”。按用户最新要求，不再逐项等待，改为一次恢复完整功能组的独立测试：
+
+```text
+https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_compat_full_test.stoverride
+```
+
+版本 `2026.10.25-compat-full-test.1`，恢复视频详情/相关推荐、评论响应、直播、原生过滤和延后空降。继续排除已复现卡顿的 grpc 解密，不重放原请求；本次还加入 api、直播、游戏三个域名解密，其手机兼容性尚未单独验证。完整包保留上游标签页/我的页面净化及播放响应调整，详见 [完整测试与二分方案](docs/BILIBILI_DIAGNOSIS.md)。
+
+**停用精简版、测试 01、原主模块和其他 B站覆写，只开完整兼容测试，划掉 B站、重连 Stash 后重开。** 原精简版、测试 01 和原主模块文件均不改动。若卡顿先切回原精简版，再用独立替代文件按功能组二分。
+
+实际走 grpc 的请求仍直通，对应广告可能保留。空降需 ViewProgress 走 app 域名并成功加载播放器资源；当前不是“全部广告保证去除”的真机验收版本。
+
+### 保留对照：独立功能测试 01
+
+此前测试 01 仅恢复 **app 域名的热门、动态、搜索响应过滤**，地址保留作对照：
 
 ```text
 https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_app_test_01_feed.stoverride

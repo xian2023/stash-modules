@@ -14,12 +14,15 @@ assert.equal(sha(read(manifest.baseline.module)),manifest.baseline.sha256);
 assert.equal(manifest.baseline.sha256,'bdfc9e53c726817ec0d29450b678524ef4e0a0174466a570e4aecb3e0c150939');
 const baseHook=full.http.script.find(h=>h.name.startsWith('bili-kokoryh-response-'));
 const hook=config.http.script.find(h=>h.name.startsWith('bili-banner-probe-'));
+const statusHook=config.http.script.find(h=>h.name.startsWith('bili-banner-status-'));
 const normalized=structuredClone(config);
 for(const key of ['name','desc','version'])normalized[key]=full[key];
 normalized.http.script.find(h=>h.name===hook.name).name=baseHook.name;
+normalized.http.script=normalized.http.script.filter(h=>h.name!==statusHook.name);
 delete normalized['script-providers'][hook.name];
+delete normalized['script-providers'][statusHook.name];
 normalized['script-providers'][baseHook.name]=structuredClone(full['script-providers'][baseHook.name]);
-assert.deepEqual(normalized,full,'diagnostic may change only metadata and response provider');
+assert.deepEqual(normalized,full,'diagnostic may only change metadata, response provider and local status endpoint');
 const rawBase='https://raw.githubusercontent.com/xian2023/stash-modules/main/';
 const source=read(manifest.script.url.slice(rawBase.length)),baseSource=read(manifest.script.baseUrl.slice(rawBase.length));
 assert.equal(sha(source),manifest.script.sha256);assert.equal(sha(baseSource),manifest.script.baseSha256);
@@ -33,17 +36,18 @@ const frame=(bytes,compressed=false)=>{const payload=compressed?gzipSync(bytes):
 const varint=n=>{const result=[];while(n>127){result.push((n&127)|128);n=Math.floor(n/128);}result.push(n);return Buffer.from(result);};
 const unknown=value=>Buffer.concat([varint((100<<3)|2),varint(value.length),value]);
 const secret='NEVER_LOG_QUERY_HEADERS_OR_BODY_7e94';
-async function run(runtime,path,body,{headers={},brokenLogger=false,query=''}={}) {
+async function run(runtime,path,body,{headers={},brokenLogger=false,query='',store=new Map()}={}) {
   let resolve,doneCount=0;const done=new Promise(r=>{resolve=r;});const logs=[],network=[];
   const request={url:`https://app.bilibili.com/bilibili.${path}`+query,method:'POST',headers:{'content-type':'application/grpc','x-bili-moss-engine-type':'1',Cookie:secret,Authorization:secret},body:new Uint8Array()};
   const context={...globals,console:{log(...args){if(brokenLogger)throw Error('logger unavailable');logs.push(args.join(' '));}},$request:request,$response:{status:200,headers,body},$argument:hook.argument,
-    $persistentStore:{read(){return null;},write(){return true;}},$httpClient:{},$notification:{post(){}},$done:out=>{doneCount++;resolve(out);}};
+    $persistentStore:{read:key=>store.get(key)??null,write:(value,key)=>(store.set(key,value),true)},$httpClient:{},$notification:{post(){throw Error('system notification must not be used');}},$done:out=>{doneCount++;resolve(out);}};
   for(const method of ['get','post'])context.$httpClient[method]=(options,callback)=>{network.push(options);callback('unexpected network');};
   vm.runInNewContext(runtime,context,{timeout:1500});let timer;
   const output=await Promise.race([done,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('No diagnostic completion')),4000);})]).finally(()=>clearTimeout(timer));
   assert.equal(doneCount,1);assert.equal(network.length,0);assert(!logs.join('\n').includes(secret));
+  assert(![...store.values()].join('\n').includes(secret));
   const summaries=logs.filter(line=>line.startsWith('[BiliBanner] ')).map(line=>JSON.parse(line.slice('[BiliBanner] '.length)));
-  return {output:structuredClone(output),summaries};
+  return {output:structuredClone(output),summaries,store};
 }
 const ad=new Uint8Array(Buffer.from(secret));
 const fixtures=[
@@ -64,10 +68,13 @@ for(const [path,name,input] of fixtures) {
     assert(result.before.unknownFields.some(f=>f.no===100&&f.wireType===2));
     if(result.before.cm!==undefined){assert.equal(result.before.cm,true);assert.equal(result.after.cm,false);}
     if(result.before.relates){assert.equal(result.before.relates.count,2);assert.equal(result.after.relates.count,1);}
+    const stored=JSON.parse(b.store.get('bili.stash.banner.ui.v1'));assert.equal(stored.version,1);assert.equal(stored.events.length,1);assert.equal(stored.events[0].event,'processed');
   }
 }
 const type=codec('Lt'),plain=Buffer.concat([type.toBinary(type.create({cm:ad})),unknown(Buffer.from(secret))]);
 const queried=await run(source,'app.viewunite.v1.View/View',frame(plain),{query:'?token='+secret});assert(queried.summaries.length>0);
+const recovered=await run(source,'app.viewunite.v1.View/View',frame(plain),{store:new Map([['bili.stash.banner.ui.v1','{broken']])});
+assert.equal(JSON.parse(recovered.store.get('bili.stash.banner.ui.v1')).events[0].event,'processed');
 const large=Buffer.concat([type.toBinary(type.create({cm:ad})),unknown(Buffer.alloc(270000,65))]);
 const largeBase=await run(baseSource,'app.viewunite.v1.View/View',frame(large));
 const largeProbe=await run(source,'app.viewunite.v1.View/View',frame(large));
@@ -81,5 +88,10 @@ const original=await run(baseSource,'app.viewunite.v1.View/View',frame(plain));a
 for(const [path,name] of [['main.community.reply.v1.Reply/MainList','tn'],['app.viewunite.v1.View/ViewProgress','Mt']]) {
   const type=codec(name),body=frame(type.toBinary(type.create()));
   const a=await run(baseSource,path,body),b=await run(source,path,body);assert.deepEqual(b.output,a.output);assert.equal(b.summaries.length,0);
+}
+for(const [path,name] of [['app.view.v1.View/ViewProgress','pt'],['app.viewunite.v1.View/ViewProgress','Mt']]) {
+  const type=codec(name),body=frame(type.toBinary(type.create({chronos:{md5:'45b564f5ba1fdd3746406937059addd8',file:'https://original.example/official.zip',sign:'signature'}})));
+  const out=await run(source,path,body),resource=type.fromBinary(out.output.body.subarray(5)).chronos;
+  assert.equal(resource.md5,manifest.chronos.md5);assert.equal(resource.file,manifest.chronos.url);assert.equal(out.summaries.length,0);
 }
 console.log('PASS banner probe: identical filters/hosts and wire output, five route summaries, secret-free counts/field IDs, bounded decode, failure and logger passthrough, no extra requests');

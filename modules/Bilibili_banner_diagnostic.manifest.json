@@ -1,23 +1,47 @@
 {
-  "version": "2026.10.25-banner-diag.1",
+  "version": "2026.10.25-banner-diag.2",
   "module": "modules/Bilibili_banner_diagnostic.stoverride",
   "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_banner_diagnostic.stoverride",
-  "sha256": "9dd7d66bb2fe613fa5e91850359b117e6d885ab054b073c0845ea07c58005f6e",
+  "sha256": "192470465583e107c404477ed77ee35d7c5814b0c62b23f43e2fb3bdc21e4db9",
   "exclusive": true,
   "baseline": {
     "module": "modules/Bilibili_compat_full_test.stoverride",
     "sha256": "bdfc9e53c726817ec0d29450b678524ef4e0a0174466a570e4aecb3e0c150939"
   },
   "script": {
-    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-1b7ac1935303a04b/response.js",
-    "sha256": "1b7ac1935303a04b2cd82f9fabd90a31aa9220675c13aea549d80a0a2f1ef9c0",
+    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-b55831b4e704db49/response.js",
+    "sha256": "e0eb31f1d1b75988eb241ea976c2afecacf2a136893e114080233ea3842ebd44",
     "baseUrl": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/response.js",
     "baseSha256": "45634d9026f6d060ad832e74bbfdfb051b7a6736d014d5cff98124b40c6fbef5"
   },
-  "logging": "local console only: hit, processed or fail-open; boolean/count/type metadata only",
+  "statusScript": {
+    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-b55831b4e704db49/status.js",
+    "sha256": "8d256ed8718f76b695708909cc6736decc1c365a492d88d1955fcddb06012acf"
+  },
+  "chronos": {
+    "base": {
+      "upstream": "upstream/chronos/e5a968f1a5055bbe5c12e67b100a6dcb.zip",
+      "upstreamSha256": "c82d74ac16e2d1ecb82f8f3d3cab2fc9fe5cc49d243964a9bd4a3877a642056e",
+      "md5": "2c699555b35c12f1712f19537c08a6c7",
+      "sha256": "20b773cb00c44ad4631b8aa024d9592a53ff87014920b500715b0046063b839e",
+      "path": "scripts/chronos/2c699555b35c12f1712f19537c08a6c7.zip",
+      "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/chronos/2c699555b35c12f1712f19537c08a6c7.zip",
+      "platform": "standard Bilibili universal iPhone package",
+      "nativeRuntimeVerified": false
+    },
+    "md5": "48d688dcbc160cfd5d737090bd708d4e",
+    "path": "scripts/chronos/48d688dcbc160cfd5d737090bd708d4e.zip",
+    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/chronos/48d688dcbc160cfd5d737090bd708d4e.zip",
+    "sha256": "1f0125c64cab12e7ddd45034757a2df4ab9eaa2a67a674efde401bb5136985d6",
+    "display": "Bilibili native ShowToast, not an iOS system notification",
+    "nativeRuntimeVerified": false
+  },
+  "logging": "Bilibili native ShowToast plus optional local console; only bounded local counters saved for 60-second reports",
   "limits": [
+    "needs app-host ViewProgress and accepted diagnostic Chronos resource",
+    "no visible toast does not prove no hook hit",
+    "recent counters are not attributed to a specific video",
     "no visibility into undecrypted grpc paths",
-    "no hit does not prove grpc origin",
     "extra summary decode limited to 256 KiB; temporary CPU overhead"
   ]
 }

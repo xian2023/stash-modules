@@ -9,6 +9,19 @@ const stashBannerProbeCodecs = {
 };
 function stashBannerProbeLog(value) {
   try { console.log('[BiliBanner] ' + JSON.stringify(value)); } catch (_) {}
+  // Bounded local metadata for the player's status endpoint. Keep only the
+  // latest event for each of five routes; never persist payloads or IDs.
+  try {
+    if(!['script-start','processed','fail-open'].includes(value.event))return;
+    const key='bili.stash.banner.ui.v1',now=Date.now(),raw=$persistentStore.read(key);
+    let stored=null;
+    try{if(typeof raw==='string'&&raw.length<=32768)stored=JSON.parse(raw);}catch(_){}
+    const events=stored?.version===1&&Array.isArray(stored.events)?stored.events:[];
+    const recent=events.filter(event=>event&&event.route!==value.route&&Number.isFinite(event.at)&&now-event.at>=0&&now-event.at<=60000).slice(-4);
+    recent.push({at:now,...value});
+    const text=JSON.stringify({version:1,events:recent});
+    if(text.length<=32768)$persistentStore.write(text,key);
+  }catch(_){}
 }
 function stashBannerProbeSummary(kind, type, body) {
   // Additional decoding is diagnostic-only and bounded independently of the

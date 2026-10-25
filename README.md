@@ -50,7 +50,7 @@ https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_c
 https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_banner_diagnostic.stoverride
 ```
 
-这是 `2026.10.25-banner-diag.1`，过滤规则和解密域名与完整兼容测试相同，仅给五条详情/关联响应加本机摘要日志。**停用其他 B站覆写，只开诊断版，完全退出 B站并重连后复现一次，然后在脚本日志中搜索 `BiliBanner`。** 不是横幅修复版；诊断结束切回完整兼容测试。[日志说明与解释边界](docs/BILIBILI_DIAGNOSIS.md)。
+当前为 `2026.10.25-banner-diag.2`，改为 **B站播放器画面内的原生短提示**，无需搜索 Stash 日志，也不发系统通知。刷新原诊断地址后，只开这一份，划掉 B站并重连；打开视频，观察“播放器已载入”及随后约 4 秒、20 秒的摘要提示。**原生资源未加载时无法显示，完全没有提示也请直接反馈，不能等同于接口未命中。** 保留原广告过滤和解密域名；额外资源约 1 MiB，首次可能下载。诊断结束切回完整兼容版。[提示说明与解释边界](docs/BILIBILI_DIAGNOSIS.md)。
 
 ### 保留对照：独立功能测试 01
 

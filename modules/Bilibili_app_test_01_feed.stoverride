@@ -1,0 +1,34 @@
+# Complete alternative to the accepted app-only baseline; enable only one Bilibili module.
+name: B站独立测试 01 · app 热门/动态/搜索
+desc: 完整替代测试版，与精简版/主模块/诊断及其他 B站覆写互斥。保留已正常的原生过滤，仅加 app 域名三个接口的响应 JS；不增加解密域名，不启用评论、弹幕、详情、播放资源、请求转发或空降。手机效果待测试。
+version: 2026.10.25-app-test.1
+category: 诊断
+homepage: https://github.com/xian2023/stash-modules
+author: kokoryh (original scripts); Kelee (original rules); local Stash adaptation
+icon: https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Bilibili.png
+http:
+  mitm:
+    - app.bilibili.com
+  body-rewrite:
+    - (?i)^https:\/\/app\.bilibili\.com\/x\/v2\/splash\/(show|event\/list2)\? response-jq .data |= with_entries(if .key | IN("show", "event_list") then .value = [] else . end)
+    - (?i)^https:\/\/app\.bilibili\.com\/x\/v2\/feed\/index\? response-jq if .data.items then .data.items |= map(select((.banner_item == null) and (.ad_info == null) and (.card_goto == "av") and (.card_type | IN("small_cover_v2", "large_cover_single_v9", "large_cover_v1")))) end
+    - (?i)^https:\/\/app\.bilibili\.com\/x\/v2\/feed\/index\/story\? response-jq if .data.items then .data.items |= map(select((.ad_info == null) and (.card_goto | IN("vertical_ad_av", "vertical_ad_live", "vertical_ad_picture") | not)) | del(.story_cart_icon, .free_flow_toast, .image_infos, .course_info, .game_info)) end
+  mock:
+    - match: (?i)^https:\/\/app\.bilibili\.com\/x\/v2\/splash\/list\?
+      status-code: 200
+      text: '{"code":0,"message":"OK","ttl":1,"data":{"max_time":0,"min_interval":31536000,"pull_interval":31536000,"keep_ids":[],"show":[],"list":[{}],"splash_request_id":""}}'
+      headers:
+        Content-Type: application/json; charset=utf-8
+  script:
+    - match: ^https://app\.bilibili\.com/bilibili\.(?:app\.show\.v1\.Popular/Index|app\.dynamic\.v2\.Dynamic/DynAll|polymer\.app\.search\.v1\.Search/SearchAll)$
+      name: bili-kokoryh-response-7d2850e383a5b312
+      type: response
+      require-body: true
+      binary-mode: true
+      timeout: 3
+      max-size: 4194304
+      argument: '{"displayUpList":"show","purifyComment":false,"optimizeRequest":false,"sponsorBlock":false,"logLevel":"off"}'
+script-providers:
+  bili-kokoryh-response-7d2850e383a5b312:
+    url: https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/response.js
+    interval: 86400

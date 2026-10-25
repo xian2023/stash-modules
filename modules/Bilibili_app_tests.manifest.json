@@ -1,0 +1,28 @@
+{
+  "version": "2026.10.25-app-test.1",
+  "exclusive": true,
+  "baseline": {
+    "module": "modules/Bilibili_app_compat.stoverride",
+    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_app_compat.stoverride",
+    "sha256": "67edc948f37ddd9353bbab3c133794daa4b827ac66c953b39900ca6789fc559c"
+  },
+  "tests": [
+    {
+      "id": "01",
+      "module": "modules/Bilibili_app_test_01_feed.stoverride",
+      "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_app_test_01_feed.stoverride",
+      "sha256": "68316da3ff7bc7103a38ec58f3149e868c24bebc2199f948cd6d4832a4ed64e6",
+      "added": "Response-only filtering of app Popular/Index, Dynamic/DynAll and Search/SearchAll",
+      "routes": [
+        "https://app.bilibili.com/bilibili.app.show.v1.Popular/Index",
+        "https://app.bilibili.com/bilibili.app.dynamic.v2.Dynamic/DynAll",
+        "https://app.bilibili.com/bilibili.polymer.app.search.v1.Search/SearchAll"
+      ],
+      "script": {
+        "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/7d2850e383a5b312/response.js",
+        "sha256": "45634d9026f6d060ad832e74bbfdfb051b7a6736d014d5cff98124b40c6fbef5"
+      },
+      "deviceStatus": "awaiting-test"
+    }
+  ]
+}

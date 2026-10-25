@@ -1,0 +1,31 @@
+{
+  "version": "2026.10.25-banner-panel.1",
+  "module": "modules/Bilibili_banner_dashboard.stoverride",
+  "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_banner_dashboard.stoverride",
+  "sha256": "150b481b0965c81c3e83915709b04b0606a1dcbadb8789e13a81b39e63f1446a",
+  "exclusive": true,
+  "baseline": {
+    "module": "modules/Bilibili_compat_full_test.stoverride",
+    "sha256": "bdfc9e53c726817ec0d29450b678524ef4e0a0174466a570e4aecb3e0c150939"
+  },
+  "dashboard": "https://api.bilibili.com/x/stash-banner/dashboard",
+  "responseScript": {
+    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-3e32b6d9f44536b0/response.js",
+    "sha256": "7ea8a419c6e4c0334b051a9d0a3730940932626cefa952de0a06dab3cd6ed07b"
+  },
+  "dashboardScript": {
+    "url": "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/bilibili/banner-panel-3e32b6d9f44536b0/dashboard.js",
+    "sha256": "be1eb55a6f05f7e388c362135730e8f996e3ded7adc2f790e791207d3f997863"
+  },
+  "assets": {
+    "https://raw.githubusercontent.com/xian2023/stash-modules/main/scripts/chronos/2c699555b35c12f1712f19537c08a6c7.zip": "20b773cb00c44ad4631b8aa024d9592a53ff87014920b500715b0046063b839e"
+  },
+  "windowSeconds": 60,
+  "deviceStatus": "awaiting-test",
+  "limits": [
+    "no player or toast dependency for panel",
+    "no records does not prove grpc origin",
+    "counters not attributed to a video",
+    "only 60-second recent window; return promptly after reproduction"
+  ]
+}

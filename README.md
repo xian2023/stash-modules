@@ -44,13 +44,13 @@ https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_c
 
 实际走 grpc 的请求仍直通，对应广告可能保留。空降需 ViewProgress 走 app 域名并成功加载播放器资源；当前不是“全部广告保证去除”的真机验收版本。
 
-当前用户反馈完整兼容测试其他表现正常，但视频下方下载横幅和相关推荐里的广告卡仍在。尚未确认请求来源；需要临时诊断时使用独立地址：
+当前用户反馈完整兼容测试其他表现正常，但视频下方下载横幅和相关推荐里的广告卡仍在。B站内原生提示也未显示，改用不依赖播放器的 Safari 本机诊断面板：
 
 ```text
-https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_banner_diagnostic.stoverride
+https://raw.githubusercontent.com/xian2023/stash-modules/main/modules/Bilibili_banner_dashboard.stoverride
 ```
 
-当前为 `2026.10.25-banner-diag.2`，改为 **B站播放器画面内的原生短提示**，无需搜索 Stash 日志，也不发系统通知。刷新原诊断地址后，只开这一份，划掉 B站并重连；打开视频，观察“播放器已载入”及随后约 4 秒、20 秒的摘要提示。**原生资源未加载时无法显示，完全没有提示也请直接反馈，不能等同于接口未命中。** 保留原广告过滤和解密域名；额外资源约 1 MiB，首次可能下载。诊断结束切回完整兼容版。[提示说明与解释边界](docs/BILIBILI_DIAGNOSIS.md)。
+版本 `2026.10.25-banner-panel.1`。停用其他 B站覆写，只启用这份并重连 Stash；在 iPhone Safari 打开 [本机面板](https://api.bilibili.com/x/stash-banner/dashboard)，点“开始本轮诊断”，切到 B站复现广告，再于 60 秒内返回点“刷新结果”，提供结果截图。页面、状态及清空操作由 Stash 本机响应，不上传摘要；保持当前解密范围及普通播放器资源。面板能打开不代表响应过滤已经运行，没有记录也不能确定广告来自哪个域名。手机接管效果待确认；诊断结束切回完整兼容版。[面板说明与解释边界](docs/BILIBILI_DIAGNOSIS.md)。
 
 ### 保留对照：独立功能测试 01
 

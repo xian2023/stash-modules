@@ -8,6 +8,7 @@ import { buildAppCompatibility } from './build-app-compat.mjs';
 import { buildAppExperiments } from './build-app-experiments.mjs';
 import { buildFullCompatibility } from './build-full-compat.mjs';
 import { buildBannerProbe } from './build-banner-probe.mjs';
+import { buildBannerDashboard } from './build-banner-dashboard.mjs';
 
 const read = file => fs.readFileSync(file, 'utf8');
 fs.mkdirSync('output/scripts', {recursive:true});
@@ -141,6 +142,7 @@ buildAppCompatibility(remote,rawBase);
 buildAppExperiments(remote,rawBase);
 buildFullCompatibility(remote,rawBase);
 buildBannerProbe(rawBase);
+buildBannerDashboard(rawBase);
 // Keep the prior behavior available as a mutually exclusive diagnostic option.
 const passthrough = structuredClone(remote);
 passthrough.name = '哔哩哔哩去广告 + 空降助手 · 评论直通对照';
